@@ -1,7 +1,8 @@
 import React, { Component } from 'react'
 import './chat.css'
 import httpService from '../services/httpService';
-import { io }  from "socket.io-client";
+import { io }  from 'socket.io-client';
+import axios from 'axios';
 export default class ChatConversion extends Component {
     state={
         view:0,
@@ -19,19 +20,41 @@ export default class ChatConversion extends Component {
   
 
 
-    async fetchContacts() {
-        let response = await httpService.get(`/contacts`);
-        console.log("response", response);
-        let { data } = response;
-        this.setState({ contactList: data });
-      }
+    // async fetchContacts() {
+    //     let response = await httpService.get(`/contacts`);
+    //     console.log("response", response);
+    //     let { data } = response;
+    //     this.setState({ contactList: data });
+    //   }
     
-      async fetchMessages() {
-        let response = await httpService.get(`/message`);
-        console.log("response", response);
-        let { data } = response;
-        this.setState({ messagesList: data });
-      }
+    //   async fetchMessages() {
+    //     let response = await httpService.get(`/message`);
+    //     console.log("response", response);
+    //     let { data } = response;
+    //     this.setState({ messagesList: data });
+    //   }
+
+    fetchContacts = () => {
+        axios
+          .get("http://localhost:2411/contacts")
+          .then((response) => {
+            this.setState({ contactList: response.data });
+          })
+          .catch((error) => {
+            console.log(error);
+          });
+      };
+
+    fetchMessages = () => {
+        axios
+          .get("http://localhost:2411/messages")
+          .then((response) => {
+            this.setState({ messagesList: response.data });
+          })
+          .catch((error) => {
+            console.log(error);
+          });
+      };
     
       componentDidMount() {
         this.fetchContacts();
@@ -41,11 +64,29 @@ export default class ChatConversion extends Component {
       }
       listenForNewMessages = () => {
        this.socket.on("newMessage", (message) => {
+        console.log(message);
           this.setState((prevState) => ({
             messagesList: [...prevState.messagesList, message],
           }));
         });
       };
+
+    // connectSocket = () => {
+    //     const socket = io("http://localhost:2410");
+    
+    //     socket.on("connect", () => {
+    //       console.log("Connected to socket.io server");
+    
+    //       // Handle socket.io events here
+    //       // Example:
+    //       socket.on("newMessage", (data) => {
+    //         console.log("Received new message:", data);
+    //         this.setState((prevState) => ({
+    //           messages: [...prevState.messages, data],
+    //         }));
+    //       });
+    //     });
+    //   };
 
       componentDidUpdate(prevProps, prevState) {
         if (prevProps !== this.props) this.fetchContacts();
