@@ -12,8 +12,15 @@ export default class ChatConversion extends Component {
         data:{},
         showFiles:false,
         contactList:[],
-        messagesList:[]
-
+        messagesList:[],
+        imageClick:false,
+        imagePreview:false,
+        files: [],
+        fileUrls: [],
+        previewUrls: [],
+      file1:[],
+      imgId:0,
+      showClose:true,
     }
   socket = io("http://localhost:2411");
 
@@ -60,6 +67,7 @@ export default class ChatConversion extends Component {
         this.fetchContacts();
         this.fetchMessages();
         this.listenForNewMessages();
+        this.findUrlForImages();
         
       }
       listenForNewMessages = () => {
@@ -70,23 +78,13 @@ export default class ChatConversion extends Component {
           }));
         });
       };
-
-    // connectSocket = () => {
-    //     const socket = io("http://localhost:2410");
-    
-    //     socket.on("connect", () => {
-    //       console.log("Connected to socket.io server");
-    
-    //       // Handle socket.io events here
-    //       // Example:
-    //       socket.on("newMessage", (data) => {
-    //         console.log("Received new message:", data);
-    //         this.setState((prevState) => ({
-    //           messages: [...prevState.messages, data],
-    //         }));
-    //       });
-    //     });
-    //   };
+      findUrlForImages=()=>{
+        this.socket.on("newFile", (fileUrl) => {
+            this.setState((prevState) => ({
+              fileUrls: [...prevState.fileUrls, fileUrl],
+            }));
+          });
+        }
 
       componentDidUpdate(prevProps, prevState) {
         if (prevProps !== this.props) this.fetchContacts();
@@ -95,10 +93,90 @@ export default class ChatConversion extends Component {
 
     handleFile=()=>{
         this.setState((prevState) => {
-            return { showFiles: !prevState.showFiles };
+            return { showFiles: !prevState.showFiles ,showClose:true };
           });
         
     }
+    handleClose=()=>{
+        this.setState((prevState) => {
+            return { showClose: !prevState.showClose ,files:[]};
+          }); 
+    }
+
+    handleImage=()=>{
+        this.setState((prevState) => {
+            return { imageClick: !prevState.imageClick };
+          });
+        
+    }
+    handleImageChange=(e)=>{
+        // const file = e.target.files[0];
+        // const reader = new FileReader();
+    
+        // reader.onloadend = () => {
+        //   this.setState({
+        //     file: file,
+        //     previewUrl: reader.result,
+        //   });
+        // };
+    
+        // if (file) {
+        //   reader.readAsDataURL(file);
+        // }
+        const files = Array.from(e.target.files);
+        const previewUrls = [];
+    
+        for (let i = 0; i < files.length; i++) {
+          const file = files[i];
+          const reader = new FileReader();
+    
+          reader.onloadend = () => {
+            previewUrls.push(reader.result);
+            if (previewUrls.length === files.length) {
+              this.setState({
+                files: files,
+                previewUrls: previewUrls,
+              });
+            }
+          };
+    
+          reader.readAsDataURL(file);
+        }
+    }
+
+    handleUserFileUpload = (e) => {
+        e.preventDefault();
+        const { files,previewUrls,fileUrls } = this.state;
+        console.log(files);
+        if (files.length === 0) {
+            return;
+          }
+        const formData = new FormData();
+      
+        for (let i = 0; i < files.length; i++) {
+          formData.append("files", files[i], files[i].name);
+        }
+      
+        let s1 = { ...this.state };
+        let id = s1.data.id;
+        let newDate = new Date();
+  let msgFind = s1.contactList.find((n) => n.id === id);
+  let msgId = msgFind.id;
+  let json = {
+    id: msgId,
+    messageType: "File",
+    senderID: msgId,
+    addedOn: newDate.toLocaleString("en-US", {
+      hour: "numeric",
+      minute: "numeric",
+      hour12: true,
+    }),
+  };
+console.log(formData);
+  this.postData("/upload",formData)
+
+this.setState({ showClose: false, files: [], showFiles: false });
+};
 
     handleChange=(e)=>{
         let { currentTarget: input } = e;
@@ -127,8 +205,14 @@ export default class ChatConversion extends Component {
     }
 
     async postData(url, obj) { 
-        let response=await httpService.post(url,obj);
-        console.log(response);
+        // let response=await httpService.post(url,obj);
+        // console.log(response);
+        try {
+            const response = await httpService.post(url,obj);
+            console.log(response.data); // Handle the response as needed
+          } catch (error) {
+            console.error(error);
+          }
     }
 
     handleUserClick=(id)=>{
@@ -140,12 +224,48 @@ export default class ChatConversion extends Component {
         s1.id=id;
         s1.data=data;
         this.setState(s1);
-        this.setState({showFiles:false});
+        this.setState({showFiles:false,showClose:false,files:[]});
     }
+
+    handleImageId = (i) => {
+        console.log(i);
+        this.setState({ imgId: i });
+      };
+
+    //   handleSubmit1=(e)=>{
+    //  e.preventDefault();
+    //         const { files } = this.state;
+    //         const formData = new FormData();
+        
+    //         for (let i = 0; i < files.length; i++) {
+    //             formData.append("files", files[i], files[i].name);
+    //         }
+    //         console.log(files);
+    //         console.log(formData);
+
+    //         let s1={...this.state}
+    //         let id=s1.data.id;
+    //         let newDate = new Date()
+    //         let msgFind=s1.contactList.find((n)=>n.id===id);
+    //         console.log(msgFind);
+    //               console.log(this.state.form);
+    //               let msgId=msgFind.id;
+    //               let json={id:msgId, messageType: "File",files:files,senderID:msgId,addedOn:newDate.toLocaleString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true })}
+    //               this.postData("/upload",json)
+    //               this.setState({showClose:false,files:[],showFiles:false})
+    //   }
+
+
+
   render() {
-    const {view,id,data,showFiles,messagesList,contactList}=this.state
+    const {view,id,data,showFiles,messagesList,contactList,
+        previewUrls,fileUrls,files,file,file1,imageClick,imagePreview,imgId,showClose}=this.state
     const {q,msgSend}=this.state.form
     console.log(this.state.data?.name);
+    let imgData = previewUrls[imgId];
+    console.log(files);
+    console.log(fileUrls);
+    console.log(previewUrls);
     return (
         view===0 ? (
 <div className="_1Fm4m">
@@ -512,6 +632,152 @@ export default class ChatConversion extends Component {
     </div>
 </div>
                         </header>
+                        {files.length>=1 ? (
+                         <span className='imageSetForBig'>
+                         {showClose && (       <div className="imageSetForBig" style={{height:"100%",transform:"translateY(0%)"}}>
+                             <span className='setImage1'>
+                                <div className="setforImage1">
+                                    <div className="setforImage2">
+                                     <div className="setForImage3">
+                                            <div className="imagViewStru">
+                                                <div className="firstSetImage McTiQ">
+                                                  <div className="CrossSetFor">
+                                                    <button className='btnSetForCross' onClick={this.handleClose}>
+                                                        <span>
+                                                        <svg viewBox="0 0 24 24" height="24" width="24" preserveAspectRatio="xMidYMid meet" class="" fill="currentColor" enable-background="new 0 0 24 24" ><path d="M19.6004 17.2L14.3004 11.9L19.6004 6.60005L17.8004 4.80005L12.5004 10.2L7.20039 4.90005L5.40039 6.60005L10.7004 11.9L5.40039 17.2L7.20039 19L12.5004 13.7L17.8004 19L19.6004 17.2Z"></path></svg>
+                                                        </span>
+                                                    </button>
+                                                  </div>
+                                                  <div className="setEmojiForimg">
+                                                  <div className="_3OtEr">
+                            <div className="_3ndVb">
+                                <span>
+                                <svg viewBox="0 0 24 24" height="24" width="24" preserveAspectRatio="xMidYMid meet" class="" fill="none"><path d="M10.5804 9.61471C10.5804 10.6992 9.9374 11.5794 9.14361 11.5794C8.34982 11.5794 7.7068 10.6992 7.7068 9.61471C7.7068 8.53022 8.34982 7.65 9.14361 7.65C9.9374 7.65 10.5804 8.53022 10.5804 9.61471Z" fill="currentColor"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M11.9983 18.502C5.8137 18.1685 5.91853 12.6359 5.9445 12.9433C5.9445 12.9433 11.9863 14.3613 18.055 12.9433C18.055 12.9433 18.055 18.2516 11.9983 18.502ZM12.2469 16.0146C16.6222 16.0146 17.2902 14.0528 17.2902 14.0528C12.5514 15.1093 6.64842 14.0528 6.64842 14.0528C6.86709 14.8489 8.74722 16.0146 12.2469 16.0146Z" fill="currentColor"></path><path d="M16.5263 9.61471C16.5263 10.6992 15.8833 11.5794 15.0895 11.5794C14.2957 11.5794 13.6527 10.6992 13.6527 9.61471C13.6527 8.53022 14.2957 7.65 15.0895 7.65C15.8833 7.65 16.5263 8.53022 16.5263 9.61471Z" fill="currentColor"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M23.14 12C23.14 18.1525 18.1524 23.14 12 23.14C5.84753 23.14 0.859985 18.1525 0.859985 12C0.859985 5.84755 5.84753 0.860001 12 0.860001C18.1524 0.860001 23.14 5.84755 23.14 12ZM21.19 12C21.19 17.0755 17.0755 21.19 12 21.19C6.92449 21.19 2.80999 17.0755 2.80999 12C2.80999 6.9245 6.92449 2.81 12 2.81C17.0755 2.81 21.19 6.9245 21.19 12Z" fill="currentColor"></path></svg> 
+                                </span>
+                            </div> 
+                            </div>
+                            <div className="_3OtEr">
+                            <div className="_3ndVb">
+                                <span>
+                                <svg viewBox="0 0 24 24" height="24" width="24" preserveAspectRatio="xMidYMid meet" class="" fill="none"><path d="M22.492 10.0663C22.4899 9.87314 22.4875 9.67478 22.4823 9.4911C22.4613 8.68504 22.42 8.07629 22.3069 7.456C22.1771 6.74019 21.882 5.9027 21.5721 5.30025C21.2569 4.68415 20.8413 4.12354 20.3429 3.63024C19.8476 3.138 19.2816 2.72605 18.6554 2.41119C18.0523 2.10576 17.2104 1.81134 16.4869 1.68329C15.8691 1.57203 15.2575 1.52999 14.4335 1.50795C14.1005 1.49955 10.6565 1.49535 9.58425 1.50795C8.74865 1.52894 8.13609 1.57203 7.51619 1.68329C6.79473 1.81238 5.95342 2.1053 5.34714 2.41177C4.72306 2.72559 4.15656 3.13806 3.65918 3.63136C3.16389 4.1215 2.74885 4.68159 2.43053 5.30084C2.12268 5.90119 1.82571 6.7381 1.69482 7.4539C1.58277 8.07419 1.54148 8.69868 1.51949 9.4911C1.51111 9.78183 1.5 12.5159 1.5 12.5159C1.5 13.0617 1.5111 14.2446 1.51948 14.5364C1.54042 15.3288 1.58383 15.9522 1.69482 16.5704C1.82676 17.2915 2.12344 18.1266 2.43129 18.7259C2.74857 19.3451 3.15777 19.9121 3.65515 20.4043C4.15044 20.8966 4.72435 21.3016 5.34948 21.6165C5.95471 21.9219 6.79473 22.215 7.51724 22.3441C7.60624 22.3599 7.6963 22.3705 7.78844 22.3831C8.29001 22.4544 8.66069 22.4779 9.49839 22.5C9.53504 22.501 11.7162 22.4726 12.1979 22.461C13.9434 22.419 15.71 21.8418 16.9938 20.659C18.1749 19.5695 19.2233 18.5885 20.06 17.7856C21.3605 16.5366 22.3215 14.4713 22.4336 12.6639L22.5018 11.5598C22.5028 11.2491 22.5018 11.0361 22.5018 10.8587C22.5028 10.8345 22.4931 10.0841 22.492 10.0663ZM18.8541 16.2428C18.0269 17.0373 16.9702 18.0273 15.7953 19.1104C15.1796 19.6782 14.4806 20.0586 13.6931 20.3052C13.7465 20.1552 13.8146 20.0518 13.845 19.887C13.889 19.6414 13.9078 19.4032 13.9151 19.1104C13.9183 19.0002 13.9246 18.2822 13.9246 18.2822C13.9382 17.7753 13.9685 17.3744 14.0366 17.0018C14.1089 16.604 14.224 16.2576 14.3884 15.9354C14.556 15.609 14.7748 15.3109 15.0387 15.0496C15.3047 14.7851 15.6062 14.5689 15.9382 14.402C16.267 14.2362 16.6188 14.1207 17.024 14.0483C17.3999 13.9811 17.7916 13.9507 18.3361 13.9371C18.3361 13.9371 18.7371 13.9381 19.0701 13.9339C19.3853 13.9255 19.6177 13.9077 19.8607 13.8646C20.0554 13.8289 20.1895 13.7544 20.3644 13.6873C20.0995 14.6686 19.5944 15.5312 18.8541 16.2428ZM20.5842 11.0445C20.5549 11.2019 20.5102 11.317 20.46 11.4146C20.3972 11.5364 20.3335 11.6337 20.2497 11.7166C20.1575 11.8079 20.0879 11.8537 19.9738 11.9114C19.8596 11.9691 19.735 12.0021 19.5853 12.0283C19.4376 12.0546 19.2732 12.0707 19.0408 12.077C18.7172 12.0812 18.3214 12.077 18.3214 12.077C17.6795 12.0938 17.2188 12.1294 16.7486 12.2134C16.1968 12.3121 15.6994 12.4751 15.2335 12.7102C14.7549 12.9505 14.1203 13.3553 13.7371 13.7353C13.357 14.111 13.0302 14.5688 12.7863 15.0442C12.5486 15.5081 12.3049 16.1716 12.2054 16.7194C12.1206 17.1886 12.0848 17.6588 12.0691 18.2529C12.0691 18.2529 12.0614 18.9708 12.0593 19.0684C12.053 19.2867 12.0368 19.4567 12.0106 19.6047C11.9844 19.7474 11.9503 19.8681 11.8937 19.9783C11.8351 20.0917 11.7792 20.1778 11.6892 20.267C11.597 20.3583 11.5111 20.41 11.3969 20.4677C11.3215 20.5055 11.2285 20.5362 11.017 20.5729C10.9888 20.5781 10.747 20.5974 10.5397 20.6016C10.5177 20.6016 9.57587 20.6122 9.53922 20.6111C8.76226 20.5912 8.21671 20.5613 7.79263 20.4773C7.21567 20.3744 6.69412 20.2355 6.2271 19.9994C5.74857 19.759 5.31574 19.4479 4.93668 19.0722C4.55658 18.6964 4.29917 18.2843 4.05728 17.8131C3.82168 17.3555 3.65538 16.859 3.55067 16.2881C3.45643 15.7685 3.41763 15.2123 3.39773 14.4933C3.3904 14.2141 3.39878 13.9234 3.39773 13.6043C3.39459 13.2979 3.3904 9.81122 3.39773 9.53308C3.41867 8.81413 3.45643 8.25891 3.55067 7.73623C3.65329 7.16947 3.82168 6.67407 4.05728 6.21436C4.29917 5.74311 4.57483 5.35737 4.95389 4.98268C5.334 4.60483 5.7675 4.28628 6.24499 4.04593C6.71305 3.80977 7.21567 3.65068 7.79158 3.54887C8.31828 3.45441 8.86174 3.40737 9.61357 3.38638C10.6691 3.37378 14.0743 3.37798 14.3895 3.38638C15.1403 3.40632 15.6837 3.45441 16.2083 3.54887C16.7863 3.65173 17.289 3.81082 17.7539 4.04593C18.2335 4.28732 18.667 4.59737 19.046 4.97312C19.4272 5.34991 19.704 5.74206 19.9438 6.21121C20.1826 6.67407 20.3489 7.16947 20.4504 7.73623C20.5457 8.25996 20.5835 8.79944 20.6034 9.53308C20.6117 9.81752 20.6225 10.4428 20.6225 10.5866C20.6172 10.7703 20.6073 10.9185 20.5842 11.0445Z" fill="currentColor"></path></svg>
+                                </span>
+                            </div>
+                             </div>
+                            <div className="_3OtEr">
+                            <div className="_3ndVb">
+                                <span>
+                                <svg viewBox="0 0 24 24" height="24" width="24" preserveAspectRatio="xMidYMid meet" class="" fill="none"><path d="M20.9636 2.1C21.6465 2.1 22.2 2.58298 22.2 3.26643C22.2 3.94989 21.6465 4.42307 20.9636 4.42307H17.2545H13.1573V20.6625C13.1573 21.3459 12.6828 21.9 12 21.9C11.3172 21.9 10.8427 21.3459 10.8427 20.6625V4.42307H6.74544H3.03635C2.35353 4.42307 1.79999 3.94989 1.79999 3.26643C1.79999 2.58298 2.35353 2.1 3.03635 2.1H20.9636Z" fill="currentColor"></path></svg>
+                                </span>
+                            </div> 
+                            </div>
+                            <div className="_3OtEr">
+                            <div className="_3ndVb">
+                                <span>
+                                <svg viewBox="0 0 24 24" height="24" width="24" preserveAspectRatio="xMidYMid meet" class="" fill="none"><path fill-rule="evenodd" clip-rule="evenodd" d="M1.35999 18.0342V22.6393H5.99278L18.9143 9.66526L14.2817 5.06126L1.35999 18.0342ZM16.1582 9.67289L5.18355 20.6911H3.30815V18.8389L14.2887 7.81484L16.1582 9.67289Z" fill="currentColor"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M17.5747 1.78958L15.3879 3.96288L20.0211 8.56752L22.2067 6.39544C22.4885 6.1154 22.6393 5.78963 22.6393 5.45357C22.6393 5.11751 22.4885 4.79175 22.2067 4.51171L19.4676 1.78958C19.1858 1.50949 18.8584 1.36 18.5212 1.36C18.1839 1.36 17.8565 1.50949 17.5747 1.78958ZM20.0211 5.82089L18.1516 3.96288L18.5212 3.59557L20.3907 5.45357L20.0211 5.82089Z" fill="currentColor"></path></svg>
+                                </span>
+                            </div> </div>
+                            <div className="_3OtEr">
+                            <div className="_3ndVb">
+                                <span>
+                                <svg viewBox="0 0 24 24" height="24" width="24" preserveAspectRatio="xMidYMid meet" class="" fill="none"><rect x="4.5" y="4.5" width="3" height="3" fill="currentColor"></rect><rect x="4.5" y="10.5" width="3" height="3" fill="currentColor"></rect><rect x="4.5" y="16.5" width="3" height="3" fill="currentColor"></rect><rect x="7.5" y="7.5" width="3" height="3" fill="currentColor"></rect><rect x="7.5" y="13.5" width="3" height="3" fill="currentColor"></rect><rect x="13.5" y="7.5" width="3" height="3" fill="currentColor"></rect><rect x="13.5" y="13.5" width="3" height="3" fill="currentColor"></rect><rect x="10.5" y="4.5" width="3" height="3" fill="currentColor"></rect><rect x="10.5" y="10.5" width="3" height="3" fill="currentColor"></rect><rect x="10.5" y="16.5" width="3" height="3" fill="currentColor"></rect><rect x="16.5" y="4.5" width="3" height="3" fill="currentColor"></rect><rect x="16.5" y="10.5" width="3" height="3" fill="currentColor"></rect><rect x="16.5" y="16.5" width="3" height="3" fill="currentColor"></rect></svg>
+                                </span>
+                            </div> </div>
+                            <div className="_3OtEr">
+                            <div className="_3ndVb">
+                                <span>
+                                <svg viewBox="0 0 24 24" height="24" width="24" preserveAspectRatio="xMidYMid meet" class="" fill="none"><path fill-rule="evenodd" clip-rule="evenodd" d="M14.3816 3.90531C14.6637 3.90531 14.8923 3.67656 14.8923 3.39438L14.8918 2.84589C16.1791 2.85038 17.6246 3.213 18.7365 4.14324C19.3525 4.65862 20.1579 5.50436 20.5746 6.56201C21.1688 8.07002 21.2528 9.90516 21.2528 10.9187C21.2528 11.0355 21.3256 11.163 21.4225 11.2599C21.5194 11.3568 21.6468 11.4297 21.7636 11.4297H22.1521C22.2924 11.4297 22.4435 11.373 22.5595 11.282C22.6755 11.1911 22.76 11.0631 22.76 10.9187C22.76 9.62054 22.556 7.44191 21.7866 5.69255C21.2979 4.58147 20.4227 3.71554 19.7402 3.13325C18.3666 1.96127 16.5472 1.44043 14.8918 1.4354L14.8923 0.610953C14.8923 0.491427 14.8504 0.375683 14.774 0.283861C14.5934 0.0670835 14.2713 0.0377945 14.0546 0.218443L12.385 1.61015C12.3612 1.62994 12.3393 1.65183 12.3196 1.67557C12.139 1.89235 12.1682 2.21453 12.385 2.39517L14.0546 3.78689C14.1463 3.8634 14.2621 3.90531 14.3816 3.90531Z" fill="currentColor"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M17.8064 15.0538V9.00506L17.7987 9.00506C17.7852 7.6881 16.7109 6.62478 15.3878 6.62478L7.13536 6.62477L7.13536 3.43437C7.13536 2.99096 6.77596 2.63803 6.33319 2.63803H5.98825C5.54547 2.63803 5.18607 2.99096 5.18607 3.43437V6.62477H2.04586C1.60299 6.62477 1.23999 6.98386 1.23999 7.42717V7.76721C1.23999 8.21052 1.60299 8.5696 2.04586 8.5696L15.3878 8.56961C15.6429 8.56961 15.8495 8.77602 15.8495 9.03035L15.8622 11.4123V15.0538C15.8622 15.4969 16.2213 15.8562 16.6643 15.8562H17.0043C17.4473 15.8562 17.8064 15.4969 17.8064 15.0538Z" fill="currentColor"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M5.18797 10.779V13.3284H5.18607L5.18609 16.8025C5.18609 18.1311 6.26561 19.208 7.59713 19.208H15.8495V22.2939C15.8495 22.7369 16.2085 23.1 16.6517 23.1H16.9967C17.4398 23.1 17.7988 22.7369 17.7988 22.2939V19.208H20.8904C21.3333 19.208 21.6963 18.8489 21.6963 18.4056V18.0655C21.6963 17.6222 21.3333 17.2631 20.8904 17.2631H7.59713C7.34204 17.2631 7.13537 17.0569 7.13537 16.8025L7.13536 13.3284H7.13226V10.779C7.13226 10.3358 6.77311 9.97659 6.33009 9.97659H5.99014C5.54711 9.97659 5.18797 10.3358 5.18797 10.779Z" fill="currentColor"></path></svg>
+                                </span>
+                            </div> </div>
+                            <div className="_3OtEr">
+                            <div className="_3ndVb">
+                                <span>
+                                
+                                </span>
+                            </div> </div>
+                            <div className="_3OtEr">
+                            <div className="_3ndVb">
+                                <span>
+                                
+                                </span>
+                            </div> </div>
+                                                  </div>
+                                                  <div className=""></div>
+                                                </div>
+                                                <div className="BiGImageSelect">
+                                                    <div className="setBigImage">
+                                                        <div className="lastImage">
+                                                            <div className="forImage">
+                                                            <img className='BigImage'  src={imgData} alt='Preview' />
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div className="InputBar">
+                                                <div className="InputBar1">
+                                                <div className="InputBar2">
+                                                <div className="InputBar3">
+                                              <div className="setInputAgain1">
+                                            <form onSubmit={this.handleSubmit}>
+                    <div className="setForm" style={{maxHeight:"7.35em",minHeight:"1.47em",userSelect:"text",whiteSpace:"pre-wrap",wordBreak:"break-word"}}>
+                        <input className="setForInput" type="text"  id="msgSend" value={msgSend} name="msgSend" placeholder="Type a message"         onChange={this.handleChange}    >
+                        {/* <p class="selectable-text copyable-text iq0m558w"></p> */}
+                            </input>
+                    </div>
+                </form>  
+        </div>
+                                            <div className="EmojiSetClass1">
+                                                <button className='Emojibtn2'>
+                                                  <span>
+                                                  <svg viewBox="0 0 24 24" height="24" width="24" preserveAspectRatio="xMidYMid meet" class="ekdr8vow dhq51u3o" version="1.1" x="0px" y="0px" enable-background="new 0 0 24 24" ><path fill="currentColor" d="M9.153,11.603c0.795,0,1.439-0.879,1.439-1.962S9.948,7.679,9.153,7.679 S7.714,8.558,7.714,9.641S8.358,11.603,9.153,11.603z M5.949,12.965c-0.026-0.307-0.131,5.218,6.063,5.551 c6.066-0.25,6.066-5.551,6.066-5.551C12,14.381,5.949,12.965,5.949,12.965z M17.312,14.073c0,0-0.669,1.959-5.051,1.959 c-3.505,0-5.388-1.164-5.607-1.959C6.654,14.073,12.566,15.128,17.312,14.073z M11.804,1.011c-6.195,0-10.826,5.022-10.826,11.217 s4.826,10.761,11.021,10.761S23.02,18.423,23.02,12.228C23.021,6.033,17.999,1.011,11.804,1.011z M12,21.354 c-5.273,0-9.381-3.886-9.381-9.159s3.942-9.548,9.215-9.548s9.548,4.275,9.548,9.548C21.381,17.467,17.273,21.354,12,21.354z  M15.108,11.603c0.795,0,1.439-0.879,1.439-1.962s-0.644-1.962-1.439-1.962s-1.439,0.879-1.439,1.962S14.313,11.603,15.108,11.603z"></path></svg>
+                                                    </span>  
+
+                                                </button>
+                                            </div>
+                                                </div>   
+                                                </div> 
+                                                </div>
+                                                </div>
+                                                </div>
+                                                <div className="footerBarImage">
+                                                <div className="setAgaainFooterImage">
+                                                {previewUrls.map((previewUrl, index) => (
+                                                      <div className="setImageClicked" onClick={() => this.handleImageId(index)}>
+                                                        <button className={imgId===index ? 'clickedImagebt' : 'btnSetImageForClicke'}>
+                                                          <div className="btnsetCrossOver">
+                                                            <span>
+                                                            <svg viewBox="0 0 24 24" height="24" width="24" preserveAspectRatio="xMidYMid meet" class="" version="1.1" x="0px" y="0px" enable-background="new 0 0 24 24" ><path fill="currentColor" d="M17.25,7.8L16.2,6.75l-4.2,4.2l-4.2-4.2L6.75,7.8l4.2,4.2l-4.2,4.2l1.05,1.05l4.2-4.2l4.2,4.2l1.05-1.05 l-4.2-4.2L17.25,7.8z"></path></svg>    
+                                                            </span>
+                                                            </div>  
+                                                            <div className="_1cFYC">
+                                                                <div className="_1Pr6q">
+                                                                <img src={previewUrl} alt={`File Preview ${index}`}  />
+                                                                </div>
+                                                            </div>
+                                                        </button>
+                                                      </div>
+                                                ))}
+                                                </div>
+                                                <div className="sendBtnINSend">
+                                                    <div className="sendBtnForSend">
+                                                    <form onSubmit={this.handleUserFileUpload}>
+                                                        <button type='submit' className="sendbtnAgain">
+                                                            <span>
+                                                            <svg viewBox="0 0 24 24" height="24" width="24" preserveAspectRatio="xMidYMid meet" class="" version="1.1" x="0px" y="0px" enable-background="new 0 0 24 24"><path fill="currentColor" d="M1.101,21.757L23.8,12.028L1.101,2.3l0.011,7.912l13.623,1.816L1.112,13.845 L1.101,21.757z"></path></svg>   
+                                                            </span>
+                                                        </button>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                                </div>
+                                            
+                                        </div>  
+                                    </div>
+                                </div>
+                                </span>   
+                            </div> )}
+                          </span>
+                        ) :(
+                            <>
                         <span className='nfki698u tvf2evcx oq44ahr5 lb5m6g5c'></span>
                         <div className="middlePArt">
                           <div className="middlePArtView">
@@ -582,13 +848,14 @@ export default class ChatConversion extends Component {
             <div className="_8JAXG" style={{transformOrigin:"leftTop"}}>
                 <ul className='_3bcLp'>
                   <li className='_1LsXI Iaqxu FCS6Q'>
-                    <button className='_1CGek' aria-label='Photos & Videos' style={{opacity:"1",transform:"translateY(0%) scaleX(1) s "}}>      
+                    <button   onClick={() => this.fileInput.click()}  className='_1CGek' aria-label='Photos & Videos' style={{opacity:"1",transform:"translateY(0%) scaleX(1) s "}}>      
                     <span className='_3fV_S colorChange'>
                  
                     <svg viewBox="0 0 53 53" height="53" width="53" preserveAspectRatio="xMidYMid meet" class="" version="1.1" x="0px" y="0px" enable-background="new 0 0 53 53" xmlspace="preserve"><g><defs><circle id="image-SVGID_1_" cx="26.5" cy="26.5" r="25.5"></circle></defs><clipPath id="image-SVGID_2_"><use xlinkhref="#image-SVGID_1_" overflow="visible"></use></clipPath><g clip-path="url(#image-SVGID_2_)"><path fill="#AC44CF" d="M26.5-1.1C11.9-1.1-1.1,5.6-1.1,27.6h55.2C54,8.6,41.1-1.1,26.5-1.1z"></path><path fill="#BF59CF" d="M53,26.5H-1.1c0,14.6,13,27.6,27.6,27.6s27.6-13,27.6-27.6C54.1,26.5,53,26.5,53,26.5z"></path><rect x="17" y="24.5" fill="#AC44CF" width="18" height="9"></rect></g></g><g fill="#F5F5F5"><path id="svg-image" d="M18.318 18.25 34.682 18.25C35.545 18.25 36.409 19.077 36.493 19.946L36.5 20.083 36.5 32.917C36.5 33.788 35.68 34.658 34.818 34.743L34.682 34.75 18.318 34.75C17.368 34.75 16.582 34.005 16.506 33.066L16.5 32.917 16.5 20.083C16.5 19.213 17.32 18.342 18.182 18.257L18.318 18.25 34.682 18.25ZM23.399 26.47 19.618 31.514C19.349 31.869 19.566 32.25 20.008 32.25L32.963 32.25C33.405 32.239 33.664 31.848 33.384 31.492L30.702 28.043C30.486 27.774 30.077 27.763 29.861 28.032L27.599 30.759 24.26 26.459C24.045 26.179 23.614 26.179 23.399 26.47ZM31.75 21.25C30.784 21.25 30 22.034 30 23 30 23.966 30.784 24.75 31.75 24.75 32.716 24.75 33.5 23.966 33.5 23 33.5 22.034 32.716 21.25 31.75 21.25Z"></path></g></svg>
                     </span>
-               
+                    <input type="file" accept='image/*,video/mp4,video/3gpp,video/quicktime' multiple onChange={this.handleImageChange} style={{display:"none"}} ref={input => (this.fileInput = input)} />
                     </button>
+                   
                   </li>
                   <li className=' _1LsXI Iaqxu FCS6Q'>
                     <button className='_1CGek' aria-label='New Sticker' style={{opacity:"1",transform:"translateY(0%) scaleX(1) s "}}>      
@@ -683,6 +950,9 @@ export default class ChatConversion extends Component {
                             </div>
                             </div> 
                         </footer>
+                        </> 
+
+                        )}
                 
                 </div>
             </div>

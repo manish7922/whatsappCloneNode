@@ -1324,3 +1324,509 @@ max-width: 60%;
     padding-bottom: -4px;
     margin-bottom: 2px;
 }
+
+
+
+
+button, input {
+    font-family: Segoe UI,Helvetica Neue,Helvetica,Lucida Grande,Arial,Ubuntu,Cantarell,Fira Sans,sans-serif;
+    margin: 0;
+}
+
+
+._1CGek:after {
+    left: 2px;
+}
+
+._1CGek:after {
+    border-radius: 50%;
+    box-shadow: 0 1px 2px rgba(var(11,20,26),.17),0 6px 8px rgba(var(11,20,26),.29);
+}
+._1CGek:after {
+    position: absolute;
+    top: 2px;
+    z-index: 100;
+    width: 49px;
+    height: 49px;
+    content: "";
+    transition: box-shadow .07s ease-out;
+}
+
+
+/* image set Chart for  */
+
+
+
+ .imageSetForBig  {
+min-height: 624px;
+}
+
+.setImage1 {
+    left: 0;
+    position: absolute;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+
+
+.setforImage1 {
+    left: 0;
+    visibility: visible;
+    height: calc(100% - 59px);
+    overflow-y: hidden;
+    top: 0;
+    display: flex;
+    width: 100%;
+    position: absolute;
+    pointer-events: auto;
+    overflow-x: hidden;
+    flex-direction: column;
+    background-color: #e9edef;
+    /* margin-top: 59px;
+     */
+}
+
+
+
+.setforImage2 {
+    z-index: 100;
+    flex-basis: 0;
+    overflow-y: hidden;
+    display: flex;
+    flex-grow: 1;
+    overflow-x: hidden;
+    position: relative;
+    flex-direction: column;
+    opacity: 1;
+}
+.setforImage3 {
+    border-left: 1px solid #e9edef;
+    background-color: #e9edef;
+    flex: 1;
+    min-width: 500px;
+    height: 100%;
+    min-height: 400px;
+    color: #54656f;
+    flex-grow: 0;
+    display: flex;
+    min-height: 0;
+    flex-shrink: 1;
+    flex-basis: auto;
+    min-width: 0;
+    order: 0;
+    justify-self: auto;
+    align-self: auto;
+    justify-content: flex-start;
+    flex-direction: column;
+    align-items: stretch;
+    flex-wrap: nowrap;
+}
+
+.imagViewStru {
+    display: flex;
+    justify-content: space-between;
+    flex: 1;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.firstSetImage{
+        display: flex;
+        justify-content: space-between;
+        flex-grow: 0;
+        flex-direction: row;
+        align-items: flex-start;
+        display: flex;
+        min-height: 0;
+        flex-shrink: 1;
+        flex-basis: auto;
+        min-width: 0;
+        order: 0;
+        justify-self: auto;
+        align-self: auto;
+        justify-content: flex-start;
+        flex-wrap: nowrap;
+}
+
+.CrossSetFor{
+        cursor: pointer;
+        width: 60px;
+}
+.btnSetForCross{
+        padding-left: 0;
+        padding-right: 0;
+        border-right: 0;
+        border-left: 0;
+        background-color: transparent;
+        font-family: inherit;
+        padding-bottom: 0;
+        font-size: 100%;
+        padding-top: 0;
+        color: inherit;
+        cursor: pointer;
+        border-bottom: 0;
+        border-top: 0;
+}
+
+
+.setEmojiForimg{
+    display: flex;
+    align-items: center;
+}
+
+.McTiQ {
+    padding: 8px 16px;
+    align-items: center;
+    height: 56px;
+    display: flex;
+    justify-content: space-between;
+    color: #54656f;
+}
+
+.BiGImageSelect{
+    margin: 25px;
+        display: flex;
+        flex: 1;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+}
+.setBigImage{
+    background: #fff;
+    box-shadow: 0 3px 12px rgba(11,20,26),.16;
+    position: relative;
+}
+.lastImage{
+cursor: pointer;
+}
+
+.forImage{
+    position: relative;
+    user-select: none;
+    width: 245.453px;
+    height: 138px;
+}
+
+
+.footerBarImage {
+    padding: 8px 0;
+    margin: 0 16px;
+    border-top: 1px solid #e9edef;
+    display: flex;
+    flex: 0 0 82px;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.setAgaainFooterImage{
+        margin: 4px 16px 0;
+        box-sizing: border-box;
+        flex: 1 1 auto;
+        flex-direction: row;
+        align-items: flex-start;
+        display: flex;
+        min-height: 0;
+        flex-shrink: 1;
+        flex-basis: auto;
+        min-width: 0;
+        order: 0;
+        justify-self: auto;
+        align-self: auto;
+        flex-wrap: nowrap;
+        justify-content: center;
+}
+
+.setImageClicked{
+    flex: 0 1 auto;
+        min-width: 0;
+        overflow-x: auto;
+        white-space: nowrap
+}
+
+.clickedImagebt{
+        margin: 6px 3px 8px;
+        border: 3px solid #00a884;
+}
+
+
+ .btnSetImageForClicke {
+        margin: 8px 5px 10px;
+        border: 1px solid #d1d7db;
+        border-radius: 5px;
+}
+.btnSetImageForClicke {
+        position: relative;
+        z-index: 100;
+        box-sizing: border-box;
+        display: inline-block;
+        flex: none;
+        overflow: hidden;
+        vertical-align: middle;
+}
+
+.btnsetCrossOver {
+    right: 1px;
+    transition: right 75ms ease-out,top 75ms ease-out;
+}
+
+.btnsetCrossOver {
+    position: absolute;
+    top: 1px;
+    z-index: 100;
+    color: #fff;
+    opacity: 0;
+}
+
+._1cFYC {
+    overflow: hidden;
+}
+
+._1Pr6q {
+    left: 0;
+}
+
+._1Pr6q {
+    position: relative;
+    top: 0;
+    z-index: 2;
+    width: 52px;
+    height: 52px;
+}
+._1Pr6q:before {
+    right: 0;
+    background: linear-gradient(10deg,transparent,transparent 45%,rgba(11,20,26,.18) 75%,rgba(11,20,26,.4));
+}
+._1Pr6q:before {
+    position: absolute;
+    top: 0;
+    width: 100%;
+    height: 40px;
+    content: "";
+    opacity: 0;
+    transition: opacity .1s ease-out;
+}
+/* btnSetImageForClicke clickedImagebt */
+.clickedImagebt.btnSetImageForClicke ._1Pr6q:after {
+    left: 0;
+}
+.clickedImagebt.btnSetImageForClicke ._1Pr6q:after {
+    position: absolute;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    content: "";
+}
+
+._1Pr6q img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    pointer-events: none;
+}
+
+
+.BigImage{
+        padding: 0px;
+        margin: 0px;
+        border: 0px;
+        background: transparent;
+        position: absolute;
+        top: 0px;
+        left: 0px;
+        width: 245.453px;
+        height: 138px;
+        display: block;
+}
+
+.InputBar{
+        padding: 8px 0;
+        position: relative;
+        min-height: 56px;
+        flex-grow: 0;
+        flex-direction: row;
+        display: flex;
+        flex-shrink: 1;
+        flex-basis: auto;
+        order: 0;
+        align-items: center;
+        align-self: auto;
+        flex-wrap: nowrap;
+        justify-content: center;
+}
+
+
+.InputBar1{
+        width: 100%;
+        flex-grow: 0;
+        flex-direction: row;
+        align-items: flex-start;
+        display: flex;
+        min-height: 0;
+        flex-shrink: 1;
+        flex-basis: auto;
+        min-width: 0;
+        order: 0;
+        align-self: auto;
+        flex-wrap: nowrap;
+        justify-content: center;
+}
+
+.InputBar2{
+        margin-right: 80px;
+        margin-left: 80px;
+        flex-grow: 0;
+        margin-top: 0;
+        flex-direction: row;
+        display: flex;
+        max-width: 650px;
+        min-height: 0;
+        margin-bottom: 0;
+        flex-shrink: 1;
+        width: 100%;
+        flex-basis: auto;
+        min-width: 0;
+        order: 0;
+        align-items: center;
+        align-self: auto;
+        position: relative;
+        flex-wrap: nowrap;
+        justify-content: center;
+}
+
+.InputBar3{
+        border-top-right-radius: 8px;
+        border-bottom-right-radius: 8px;
+        padding-left: 16px;
+        padding-right: 16px;
+        border-bottom-left-radius: 8px;
+        border-top-left-radius: 8px;
+        flex-grow: 0;
+        flex-direction: row;
+        align-items: flex-start;
+        background-color: #fff;
+        display: flex;
+        min-height: 0;
+        flex-shrink: 1;
+        width: 100%;
+        flex-basis: auto;
+        min-width: 0;
+        order: 0;
+        justify-self: auto;
+        align-self: auto;
+        min-height: 40px;
+        justify-content: flex-start;
+        padding-top: 4px;
+        flex-wrap: nowrap;
+        box-sizing: border-box;
+        padding-bottom: 4px;
+}
+
+.setInputAgain1{
+        margin-left: 0;
+        margin-right: 0;
+        color: #3b4a54;
+        user-select: text;
+        -moz-user-select: text;
+        -webkit-user-select: text;
+        -ms-user-select: text;
+        margin-bottom: 6px;
+        width: 100%;
+        margin-top: 6px;
+        min-height: 20px;
+        position: relative;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+}
+
+/* .selectable-text {
+    -webkit-user-select: text;
+    -moz-user-select: text;
+    -ms-user-select: text;
+}
+
+.iq0m558w {
+    line-height: inherit;
+} */
+
+
+.EmojiSetClass1 {
+    flex-grow: 0;
+    min-height: 35px;
+    flex-direction: row;
+    display: flex;
+    min-height: 0;
+    flex-shrink: 1;
+    flex-basis: auto;
+    min-width: 0;
+    order: 0;
+    align-items: center;
+    align-self: auto;
+    justify-content: flex-start;
+    flex-wrap: nowrap;
+}
+
+
+.Emojibtn2{
+        padding-left: 0;
+        margin-left: 8px;
+        padding-right: 0;
+        border-right: 0;
+        border-left: 0;
+        background-color: transparent;
+        font-family: inherit;
+        padding-bottom: 0;
+        font-size: 100%;
+        padding-top: 0;
+        color: inherit;
+        color: #8696a0;
+        cursor: pointer;
+        border-bottom: 0;
+        border-top: 0;
+}
+
+.sendBtnINSend{
+    width: 60px;
+    height: 60px;
+}
+
+.sendBtnForSend{
+    position: relative;
+}
+
+.sendbtnAgain{
+        border-bottom-left-radius: 50%;
+        border-top-right-radius: 50%;
+        padding-left: 0;
+        border-top-left-radius: 50%;
+        padding-right: 0;
+        border-bottom-right-radius: 50%;
+        cursor: pointer;
+        transition-duration: .08s;
+        padding-bottom: 0;
+        display: flex;
+        background-color: #00a884;
+        text-transform: uppercase;
+        transition-timing-function: cubic-bezier(.4,0,.2,1);
+        width: 60px;
+        height: 60px;
+        color: #fff;
+        padding-top: 0;
+        font-weight: 500;
+        box-shadow: 0 1px 3px rgba(11,20,26,.4);
+        align-items: center;
+        font-size: 0.875rem;
+        transition-property: box-shadow;
+        justify-content: center;
+}
+
+
+
+
+
+
+
+
+
