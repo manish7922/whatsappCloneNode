@@ -3,8 +3,9 @@ import "./chat.css";
 import httpService from "../services/httpService";
 import { io } from "socket.io-client";
 import axios from "axios";
-import { Document, Page } from 'react-pdf';
+import { Document,Page,pdfjs} from 'react-pdf';
 
+pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.js`;
 
 export default class ChatConversion extends Component {
   state = {
@@ -25,8 +26,8 @@ export default class ChatConversion extends Component {
     imgId: 0,
     showClose: true,
     documents: [],
-    svgPathData:
-      "M3 0h56.928a5 5 0 0 1 3.536 1.464l15.072 15.072A5 5 0 0 1 80 20.07V101a3 3 0 0 1-3 3H3a3 3 0 0 1-3-3V3a3 3 0 0 1 3-3z M3-.5h56.929a5.5 5.5 0 0 1 3.889 1.61l15.071 15.072a5.5 5.5 0 0 1 1.611 3.89V101a3.5 3.5 0 0 1-3.5 3.5H3A3.5 3.5 0 0 1-.5 101V3A3.5 3.5 0 0 1 3-.5z M13 28h52v2h-52v-2zm0 5h52v2h-52v-2zm0 5h52v2h-52v-2zm0 5h40v2h-40v-2zm0 10h52v2h-52v-2zm0 5h52v2h-52v-2zm0 5h52v2h-52v-2zm0 5h52v2h-52v-2zm0 5h27v2h-27v-2zm48-27v15a3 3 0 0 0 3 3h15",
+    numPages: null,
+    currentPage:1,
   };
   socket = io("http://localhost:2411");
 
@@ -71,6 +72,7 @@ export default class ChatConversion extends Component {
     this.fetchMessages();
     this.listenForNewMessages();
     this.findUrlForImages();
+    pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.js`;
   }
   listenForNewMessages = () => {
     this.socket.on("newMessage", (message) => {
@@ -111,59 +113,103 @@ export default class ChatConversion extends Component {
     });
   };
 
-  // handleDocumentChange = (e) => {
-  //     const files = Array.from(e.target.files);
-  //     const svgPaths = [];
-
-  //     files.forEach(file => {
-  //       const reader = new FileReader();
-
-  //       reader.onloadend = () => {
-  //         svgPaths.push(this.svgPathData);
-
-  //         if (svgPaths.length === files.length) {
-  //           this.setState({
-  //             documents: svgPaths,
-  //           });
-  //         }
-  //       };
-
-  //       reader.readAsDataURL(file);
-  //     });
-  //   }.
-
   handleDocumentChange = (e) => {
     const documents = Array.from(e.target.files);
+    console.log(documents);
     this.setState({
       documents: documents,
       showFiles: false,
     });
+    // const pdfURLs = [];
+    
+    // for (let i = 0; i < documents.length; i++) {
+    //   const document = documents[i];
+    //   const reader = new FileReader();
+  
+    //   reader.onloadend = () => {
+    //     pdfURLs.push(reader.result);
+    //     console.log(pdfURLs);
+    //     if (pdfURLs.length === documents.length) {
+    //       this.setState({
+    //         documents: pdfURLs,
+    //         showFiles: false,
+    //       });
+    //     }
+    //   };
+  
+    //   reader.readAsDataURL(document);
+    // }
+
+    
+
   };
+
+  onDocumentLoadSuccess = ({ numPages }) => {
+    this.setState({ 
+        numPages,
+        // documents: document.querySelector('.react-pdf__Page canvas').toDataURL(),
+    });
+  };
+
+  convertPdfToImage = async (file) => {
+    debugger
+    const pdfData = new Uint8Array(await file.arrayBuffer());
+  
+    const loadingTask = pdfjs.getDocument({
+      data: pdfData,
+   
+    });
+  
+    const pdf = await loadingTask.promise;
+    const page = await pdf.getPage(1);
+    const viewport = page.getViewport({ scale: 1 });
+    const canvas = document.createElement('canvas');
+    const context = canvas.getContext('2d');
+    canvas.height = viewport.height;
+    canvas.width = viewport.width;
+    const renderTask = page.render({ canvasContext: context, viewport });
+  
+    return new Promise((resolve, reject) => {
+      renderTask.promise
+        .then(() => {
+          const imageDataUrl = canvas.toDataURL();
+          resolve(imageDataUrl);
+        })
+        .catch((error) => {
+          reject(error);
+        });
+    });
+  };
+  
   
 
 
 //   handleDocumentChange = (e) => {
 //     const documents = Array.from(e.target.files);
 //     console.log(documents);
-//     const pdfURLs = [];
+//         //       this.setState({
+//         //     documents: documents,
+//         //     showFiles: false,
+//         //   });
+    // const pdfURLs = [];
     
-//     for (let i = 0; i < documents.length; i++) {
-//       const document = documents[i];
-//       const reader = new FileReader();
+    // for (let i = 0; i < documents.length; i++) {
+    //   const document = documents[i];
+    //   const reader = new FileReader();
   
-//       reader.onloadend = () => {
-//         pdfURLs.push(reader.result);
-//         console.log(pdfURLs);
-//         if (pdfURLs.length === documents.length) {
-//           this.setState({
-//             documents: pdfURLs,
-//             showFiles: false,
-//           });
-//         }
-//       };
+    //   reader.onloadend = () => {
+    //     pdfURLs.push(reader.result);
+    //     console.log(pdfURLs);
+    //     if (pdfURLs.length === documents.length) {
+    //       this.setState({
+    //         documents: pdfURLs,
+    //         showFiles: false,
+    //       });
+    //     }
+    //   };
   
-//       reader.readAsDataURL(document);
-//     }
+    //   reader.readAsDataURL(document);
+    // }
 //   };
   
   
@@ -329,6 +375,17 @@ export default class ChatConversion extends Component {
   //               this.postData("/upload",json)
   //               this.setState({showClose:false,files:[],showFiles:false})
   //   }
+  getFileExtension = (filename) => {
+    // debugger
+    if (typeof filename === 'string') {
+      const parts = filename.split('.');
+      console.log(parts);
+      if (parts.length >= 1) {
+        return parts[parts.length - 1].toLowerCase();
+      }
+    }
+    return null;
+  };
 
   render() {
     const {
@@ -348,6 +405,8 @@ export default class ChatConversion extends Component {
       imagePreview,
       imgId,
       showClose,
+      numPages,
+      currentPage
     } = this.state;
     const { q, msgSend } = this.state.form;
     console.log(this.state.data?.name);
@@ -2089,11 +2148,22 @@ export default class ChatConversion extends Component {
                                   <div className="setBigImage">
                                     <div className="lastImage">
                                       <div className="forImage">
-                                        <img
+                                        {/* <img
                                           className="BigImage"
                                           src={imgData}
                                           alt="Preview"
-                                        />
+                                        /> */}
+             {this.getFileExtension(file) === 'pdf' && (
+           <Document file={imgData} onLoadSuccess={this.onDocumentLoadSuccess}>
+           <Page pageNumber={currentPage} />
+         </Document>
+            )}
+
+            {/* {(this.getFileExtension(file) === 'txt' ||
+              this.getFileExtension(file) === 'docx') && (
+              // <FileViewer fileType={this.getFileExtension(file)} filePath={imgData} />
+            )} */}
+
                                       </div>
                                     </div>
                                   </div>
@@ -2189,9 +2259,31 @@ export default class ChatConversion extends Component {
                                         </div>
                                         <div className="_1cFYC">
                                           <div className="_1Pr6q">
-                                     <Document file={document}>
-                                      <Page pageNumber={1} />
-                                        </Document>
+                                          {/* {this.getFileExtension(document.name) === 'pdf' && (
+           <Document file={URL.createObjectURL(document)} onLoadSuccess={this.onDocumentLoadSuccess}>
+           <Page pageNumber={currentPage} />
+         </Document>
+            )} */}
+
+{this.getFileExtension(document.name) === 'pdf' &&(
+    <>
+    {/* <img src={URL.createObjectURL(document)}  alt="Preview"  /> */}
+    <Document file={document} onLoadSuccess={this.onDocumentLoadSuccess}>
+    <Page pageNumber={1} />
+  </Document>
+  </>
+
+)}
+{/* 
+            {
+              this.getFileExtension(file) === 'docx' && (
+              <FileViewer fileType={this.getFileExtension(file)} filePath={document} />
+            )} */}
+
+            {this.getFileExtension(document.name) === 'txt' && 
+            <div className="DocumentTXT TxtDocument icon-doc-txt"></div>
+            }
+
                                           </div>
                                         </div>
                                       </button>
