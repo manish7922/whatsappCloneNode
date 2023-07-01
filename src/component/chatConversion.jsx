@@ -147,7 +147,6 @@ export default class ChatConversion extends Component {
   onDocumentLoadSuccess = ({ numPages }) => {
     this.setState({ 
         numPages,
-        // documents: document.querySelector('.react-pdf__Page canvas').toDataURL(),
     });
   };
 
@@ -180,39 +179,80 @@ export default class ChatConversion extends Component {
         });
     });
   };
-  
-  
-
-
-//   handleDocumentChange = (e) => {
-//     const documents = Array.from(e.target.files);
-//     console.log(documents);
-//         //       this.setState({
-//         //     documents: documents,
-//         //     showFiles: false,
-//         //   });
-    // const pdfURLs = [];
     
-    // for (let i = 0; i < documents.length; i++) {
-    //   const document = documents[i];
-    //   const reader = new FileReader();
-  
-    //   reader.onloadend = () => {
-    //     pdfURLs.push(reader.result);
-    //     console.log(pdfURLs);
-    //     if (pdfURLs.length === documents.length) {
-    //       this.setState({
-    //         documents: pdfURLs,
-    //         showFiles: false,
-    //       });
-    //     }
-    //   };
-  
-    //   reader.readAsDataURL(document);
-    // }
-//   };
-  
-  
+handleUserDocumentFileUpload=(e)=>{
+  e.preventDefault();
+  const { documents, previewUrls, fileUrls } = this.state;
+  console.log(documents);
+  const formData = new FormData();
+
+  for (let i = 0; i < documents.length; i++) {
+    formData.append("documents", documents[i]);
+  }
+
+  let s1 = { ...this.state };
+  let id = s1.data.id;
+  let newDate = new Date();
+  let msgFind = s1.contactList.find((n) => n.id === id);
+  console.log(msgFind);
+  let msgId = msgFind.id;
+  let date = newDate.toLocaleString("en-US", {
+    hour: "numeric",
+    minute: "numeric",
+    hour12: true,
+  });
+  formData.append("id", msgId);
+  formData.append("senderID", msgId);
+  formData.append("addedOn", date);
+  formData.append("messageType", "file");
+
+  console.log(formData);
+  this.postData("/uploadDocument", formData);
+
+  this.setState({
+    showClose: false,
+    documents: [],
+    showFiles: false,
+    previewUrls: [],
+  });
+}
+
+handleUserFileUpload = (e) => {
+  e.preventDefault();
+  const { files, previewUrls, fileUrls } = this.state;
+  console.log(files);
+  const formData = new FormData();
+
+  for (let i = 0; i < files.length; i++) {
+    formData.append("files", files[i]);
+  }
+
+  let s1 = { ...this.state };
+  let id = s1.data.id;
+  let newDate = new Date();
+  let msgFind = s1.contactList.find((n) => n.id === id);
+  console.log(msgFind);
+  let msgId = msgFind.id;
+  let date = newDate.toLocaleString("en-US", {
+    hour: "numeric",
+    minute: "numeric",
+    hour12: true,
+  });
+  formData.append("id", msgId);
+  formData.append("senderID", msgId);
+  formData.append("addedOn", date);
+  formData.append("messageType", "file");
+
+  console.log(formData);
+  this.postData("/upload", formData);
+
+  this.setState({
+    showClose: false,
+    files: [],
+    showFiles: false,
+    previewUrls: [],
+  });
+};
 
   handleImageChange = (e) => {
     // const file = e.target.files[0];
@@ -250,42 +290,7 @@ export default class ChatConversion extends Component {
     }
   };
 
-  handleUserFileUpload = (e) => {
-    e.preventDefault();
-    const { files, previewUrls, fileUrls } = this.state;
-    console.log(files);
-    const formData = new FormData();
 
-    for (let i = 0; i < files.length; i++) {
-      formData.append("files", files[i]);
-    }
-
-    let s1 = { ...this.state };
-    let id = s1.data.id;
-    let newDate = new Date();
-    let msgFind = s1.contactList.find((n) => n.id === id);
-    console.log(msgFind);
-    let msgId = msgFind.id;
-    let date = newDate.toLocaleString("en-US", {
-      hour: "numeric",
-      minute: "numeric",
-      hour12: true,
-    });
-    formData.append("id", msgId);
-    formData.append("senderID", msgId);
-    formData.append("addedOn", date);
-    formData.append("messageType", "file");
-
-    console.log(formData);
-    this.postData("/upload", formData);
-
-    this.setState({
-      showClose: false,
-      files: [],
-      showFiles: false,
-      previewUrls: [],
-    });
-  };
 
   async postData(url, obj) {
     try {
@@ -348,7 +353,8 @@ export default class ChatConversion extends Component {
     this.setState({ showFiles: false, showClose: false, files: [] });
   };
 
-  handleImageId = (i) => {
+  handleImageId = (i,document) => {
+    console.log(document);
     console.log(i);
     this.setState({ imgId: i });
   };
@@ -2144,30 +2150,52 @@ export default class ChatConversion extends Component {
 
                                   <div className=""></div>
                                 </div>
-                                <div className="BiGImageSelect">
-                                  <div className="setBigImage">
-                                    <div className="lastImage">
-                                      <div className="forImage">
-                                        {/* <img
-                                          className="BigImage"
-                                          src={imgData}
-                                          alt="Preview"
-                                        /> */}
-             {this.getFileExtension(file) === 'pdf' && (
-           <Document file={imgData} onLoadSuccess={this.onDocumentLoadSuccess}>
-           <Page pageNumber={currentPage} />
-         </Document>
-            )}
+                       
+                                {this.getFileExtension(documents[imgId].name) === "pdf" && (
+                                      <div className="_33XcX">
+                                        <div className="MtkFD">
+                                          <div className="_2pktu _2MmTH">
+                                            <div className="" style={{width:"144px",height:"203px"}}>
+                                       
+                <Document
+                  file={documents[imgId]}
+                  onLoadSuccess={this.onDocumentLoadSuccess}
+                  className="_3WSt9 yE4aq"
+                >
+                  <Page pageNumber={currentPage} />
+                </Document>
 
-            {/* {(this.getFileExtension(file) === 'txt' ||
-              this.getFileExtension(file) === 'docx') && (
-              // <FileViewer fileType={this.getFileExtension(file)} filePath={imgData} />
-            )} */}
-
+                                            </div>
+                                          </div>
+                                        </div>
                                       </div>
-                                    </div>
+                                                    )}
+
+{this.getFileExtension(documents[imgId].name) === 'txt' && 
+                                      <div className="setDocumentTxt">
+                <div className="setDocumentAgain">
+                  <div className="AgainSetDocument">
+                    <div className="setDocument">
+                      <span>
+                        <svg viewBox="0 0 88 110" height="110" width="88" preserveAspectRatio="xMidYMid meet" class=""><defs><path d="M3 0h56.928a5 5 0 0 1 3.536 1.464l15.072 15.072A5 5 0 0 1 80 20.07V101a3 3 0 0 1-3 3H3a3 3 0 0 1-3-3V3a3 3 0 0 1 3-3z" id="a"></path></defs><g transform="translate(4 3)" fill="none" fill-rule="evenodd"><use fill="#000" filter="url(#filter-3)"></use><use fill="#FFF" ></use><path stroke-opacity="0.08" stroke="#000" d="M3-.5h56.929a5.5 5.5 0 0 1 3.889 1.61l15.071 15.072a5.5 5.5 0 0 1 1.611 3.89V101a3.5 3.5 0 0 1-3.5 3.5H3A3.5 3.5 0 0 1-.5 101V3A3.5 3.5 0 0 1 3-.5z" fill="url(#linearGradient-1)"></path><rect fill-opacity="0.2" fill="#000" x="13" y="28" width="52" height="2" rx="0.5"></rect><rect fill-opacity="0.2" fill="#000" x="13" y="33" width="52" height="2" rx="0.5"></rect><rect fill-opacity="0.2" fill="#000" x="13" y="38" width="52" height="2" rx="0.5"></rect><rect fill-opacity="0.2" fill="#000" x="13" y="43" width="40" height="2" rx="0.5"></rect><rect fill-opacity="0.2" fill="#000" x="13" y="53" width="52" height="2" rx="0.5"></rect><rect fill-opacity="0.2" fill="#000" x="13" y="58" width="52" height="2" rx="0.5"></rect><rect fill-opacity="0.2" fill="#000" x="13" y="63" width="52" height="2" rx="0.5"></rect><rect fill-opacity="0.2" fill="#000" x="13" y="68" width="52" height="2" rx="0.5"></rect><rect fill-opacity="0.2" fill="#000" x="13" y="73" width="52" height="2" rx="0.5"></rect><rect fill-opacity="0.2" fill="#000" x="13" y="78" width="27" height="2" rx="0.5"></rect><path d="M61.5.5v15a3 3 0 0 0 3 3h15" stroke-opacity="0.12" stroke="#000" fill="#FFF"></path></g></svg>
+                  </span>
+                      <div className="setViewDocument">
+                      No preview available
+                      </div>
+
+                    </div>
+                  </div>
+                </div>
+               </div>
+                  }
+
+              {/* {(this.getFileExtension(documents[imgId].name) === 'txt' ||
+              this.getFileExtension(documents[imgId].name) === 'docx') && (
+                // <FileViewer fileType={this.getFileExtension(file)} filePath={imgData} />
+              )} */}
+                         {/* </div>
                                   </div>
-                                </div>
+                                </div> */}
                                 <div className="InputBar">
                                   <div className="InputBar1">
                                     <div className="InputBar2">
@@ -2228,7 +2256,7 @@ export default class ChatConversion extends Component {
                                   {documents.map((document, index) => (
                                     <div
                                       className="setImageClicked"
-                                      onClick={() => this.handleImageId(index)}
+                                      onClick={() => this.handleImageId(index,document)}
                                     >
                                       <button
                                         className={
@@ -2259,18 +2287,14 @@ export default class ChatConversion extends Component {
                                         </div>
                                         <div className="_1cFYC">
                                           <div className="_1Pr6q">
-                                          {/* {this.getFileExtension(document.name) === 'pdf' && (
-           <Document file={URL.createObjectURL(document)} onLoadSuccess={this.onDocumentLoadSuccess}>
-           <Page pageNumber={currentPage} />
-         </Document>
-            )} */}
 
 {this.getFileExtension(document.name) === 'pdf' &&(
     <>
-    {/* <img src={URL.createObjectURL(document)}  alt="Preview"  /> */}
+    <div className="pdf-preview">
     <Document file={document} onLoadSuccess={this.onDocumentLoadSuccess}>
     <Page pageNumber={1} />
   </Document>
+  </div>
   </>
 
 )}
@@ -2292,7 +2316,7 @@ export default class ChatConversion extends Component {
                                 </div>
                                 <div className="sendBtnINSend">
                                   <div className="sendBtnForSend">
-                                    <form onSubmit={this.handleUserFileUpload}>
+                                    <form onSubmit={this.handleUserDocumentFileUpload}>
                                       <button
                                         type="submit"
                                         className="sendbtnAgain"
