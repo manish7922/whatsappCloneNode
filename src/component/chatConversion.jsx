@@ -114,33 +114,14 @@ export default class ChatConversion extends Component {
   };
 
   handleDocumentChange = (e) => {
+
     const documents = Array.from(e.target.files);
     console.log(documents);
+    // debugger
     this.setState({
       documents: documents,
       showFiles: false,
-    });
-    // const pdfURLs = [];
-    
-    // for (let i = 0; i < documents.length; i++) {
-    //   const document = documents[i];
-    //   const reader = new FileReader();
-  
-    //   reader.onloadend = () => {
-    //     pdfURLs.push(reader.result);
-    //     console.log(pdfURLs);
-    //     if (pdfURLs.length === documents.length) {
-    //       this.setState({
-    //         documents: pdfURLs,
-    //         showFiles: false,
-    //       });
-    //     }
-    //   };
-  
-    //   reader.readAsDataURL(document);
-    // }
-
-    
+    });    
 
   };
 
@@ -150,35 +131,7 @@ export default class ChatConversion extends Component {
     });
   };
 
-  convertPdfToImage = async (file) => {
-    debugger
-    const pdfData = new Uint8Array(await file.arrayBuffer());
-  
-    const loadingTask = pdfjs.getDocument({
-      data: pdfData,
-   
-    });
-  
-    const pdf = await loadingTask.promise;
-    const page = await pdf.getPage(1);
-    const viewport = page.getViewport({ scale: 1 });
-    const canvas = document.createElement('canvas');
-    const context = canvas.getContext('2d');
-    canvas.height = viewport.height;
-    canvas.width = viewport.width;
-    const renderTask = page.render({ canvasContext: context, viewport });
-  
-    return new Promise((resolve, reject) => {
-      renderTask.promise
-        .then(() => {
-          const imageDataUrl = canvas.toDataURL();
-          resolve(imageDataUrl);
-        })
-        .catch((error) => {
-          reject(error);
-        });
-    });
-  };
+
     
 handleUserDocumentFileUpload=(e)=>{
   e.preventDefault();
@@ -1423,11 +1376,14 @@ handleUserFileUpload = (e) => {
                                               >
                                                 <div className="g0rxnol2 ln8gz9je ppled2lx">
                                                   <div className="imageDataSend m-1">
-                                                    <img
-                                                      src={`data:image/png;base64,${p.buffer}`}
+                                                    {/* <img
+                                                      src={`data:application/pdf;base64,${p.buffer}`}
                                                       alt=""
                                                       className="setAgainImageForSend"
-                                                    />
+                                                    /> */}
+                                                    <embed    src={`data:application/pdf;base64,${p.buffer}`}
+                                                      className="setAgainImageForSend"
+                                                    ></embed>
                                                   </div>
                                                 </div>
                                               </div>
