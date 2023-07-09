@@ -3,6 +3,10 @@ import "./chat.css";
 import httpService from "../services/httpService";
 import { io } from "socket.io-client";
 import axios from "axios";
+import download from 'downloadjs';
+// import 'pdfjs-dist/build/pdf.worker.entry';
+// import pdfjsWorker from 'pdfjs-dist/build/pdf.worker.entry';
+// import * as pdfjs from 'pdfjs-dist'
 import { Document,Page,pdfjs} from 'react-pdf';
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.js`;
@@ -31,20 +35,6 @@ export default class ChatConversion extends Component {
   };
   socket = io("http://localhost:2411");
 
-  // async fetchContacts() {
-  //     let response = await httpService.get(`/contacts`);
-  //     console.log("response", response);
-  //     let { data } = response;
-  //     this.setState({ contactList: data });
-  //   }
-
-  //   async fetchMessages() {
-  //     let response = await httpService.get(`/message`);
-  //     console.log("response", response);
-  //     let { data } = response;
-  //     this.setState({ messagesList: data });
-  //   }
-
   fetchContacts = () => {
     axios
       .get("http://localhost:2411/contacts")
@@ -72,6 +62,7 @@ export default class ChatConversion extends Component {
     this.fetchMessages();
     this.listenForNewMessages();
     this.findUrlForImages();
+    this.findUrlForDocuments();
     pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.js`;
   }
   listenForNewMessages = () => {
@@ -82,6 +73,14 @@ export default class ChatConversion extends Component {
       }));
     });
   };
+  findUrlForDocuments=()=>{
+    this.socket.on("newDocument", (fileUrl) => {
+      console.log(fileUrl);
+      this.setState((prevState) => ({
+        messagesList: [...prevState.messagesList, fileUrl],
+      }));
+    });
+  }
   findUrlForImages = () => {
     this.socket.on("newFile", (fileUrl) => {
       console.log(fileUrl);
@@ -312,28 +311,6 @@ handleUserFileUpload = (e) => {
     this.setState({ imgId: i });
   };
 
-  //   handleSubmit1=(e)=>{
-  //  e.preventDefault();
-  //         const { files } = this.state;
-  //         const formData = new FormData();
-
-  //         for (let i = 0; i < files.length; i++) {
-  //             formData.append("files", files[i], files[i].name);
-  //         }
-  //         console.log(files);
-  //         console.log(formData);
-
-  //         let s1={...this.state}
-  //         let id=s1.data.id;
-  //         let newDate = new Date()
-  //         let msgFind=s1.contactList.find((n)=>n.id===id);
-  //         console.log(msgFind);
-  //               console.log(this.state.form);
-  //               let msgId=msgFind.id;
-  //               let json={id:msgId, messageType: "File",files:files,senderID:msgId,addedOn:newDate.toLocaleString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true })}
-  //               this.postData("/upload",json)
-  //               this.setState({showClose:false,files:[],showFiles:false})
-  //   }
   getFileExtension = (filename) => {
     // debugger
     if (typeof filename === 'string') {
@@ -345,6 +322,163 @@ handleUserFileUpload = (e) => {
     }
     return null;
   };
+
+
+  // convertToPDFURL=(singlePage)=> {
+  //   return new Promise((resolve, reject) => {
+  //     const base64Data = singlePage;
+  
+  //     // Convert Base64 to binary data
+  //     const binaryData = atob(base64Data);
+  //     const arrayBuffer = new ArrayBuffer(binaryData.length);
+  //     const uint8Array = new Uint8Array(arrayBuffer);
+  
+  //     for (let i = 0; i < binaryData.length; i++) {
+  //       uint8Array[i] = binaryData.charCodeAt(i);
+  //     }
+  
+  //     // Create Blob object
+  //     const blob = new Blob([arrayBuffer], { type: 'image/jpeg' });
+  
+  //     // Create URL for opening the PDF
+  //     const url = URL.createObjectURL(blob);
+  // console.log(url);
+  //     // Resolve with the PDF URL
+  //     resolve(url);
+  //   });
+  // }
+
+
+  // convertToImageURL(singlePage) {
+  //   return new Promise((resolve, reject) => {
+  //     const base64Data = singlePage;
+  
+  //     // Convert Base64 to binary data
+  //     const binaryData = atob(base64Data);
+  //     const arrayBuffer = new ArrayBuffer(binaryData.length);
+  //     const uint8Array = new Uint8Array(arrayBuffer);
+  
+  //     for (let i = 0; i < binaryData.length; i++) {
+  //       uint8Array[i] = binaryData.charCodeAt(i);
+  //     }
+  
+  //     // Create Blob object
+  //     const blob = new Blob([arrayBuffer], { type: 'application/pdf' });
+  
+  //     // Convert PDF page to image
+  //     const reader = new FileReader();
+  //     reader.onloadend = function () {
+  //       const pdfData = new Uint8Array(reader.result);
+  //       const loadingTask =pdfjs.getDocument({ data: pdfData });
+  //       loadingTask.promise
+  //         .then(function (pdf) {
+  //           // Fetch the first page
+  //           pdf.getPage(1).then(function (page) {
+  //             const scale = 2;
+  //             const viewport = page.getViewport({ scale });
+  //             const canvas = document.createElement('canvas');
+  //             const context = canvas.getContext('2d');
+  //             canvas.height = viewport.height;
+  //             canvas.width = viewport.width;
+  
+  //             const renderContext = {
+  //               canvasContext: context,
+  //               viewport: viewport,
+  //             };
+  
+  //             // Render the PDF page into the canvas context
+  //             const renderTask = page.render(renderContext);
+  //             renderTask.promise.then(function () {
+  //               // Convert canvas to data URL
+  //               const imageURL = canvas.toDataURL('image/png');
+  
+  //               // Resolve with the image URL
+  //               resolve(imageURL);
+  //             });
+  //           });
+  //         })
+  //         .catch(function (error) {
+  //           reject(error);
+  //         });
+  //     };
+  //     reader.readAsArrayBuffer(blob);
+  //   });
+  // }
+
+
+  // convertToImageURL(singlePage) {
+  //   return new Promise((resolve, reject) => {
+  //     const base64Data = singlePage;
+
+  //     // Convert Base64 to binary data
+  //     const binaryData = atob(base64Data);
+  //     const arrayBuffer = new ArrayBuffer(binaryData.length);
+  //     const uint8Array = new Uint8Array(arrayBuffer);
+
+  //     for (let i = 0; i < binaryData.length; i++) {
+  //       uint8Array[i] = binaryData.charCodeAt(i);
+  //     }
+
+  //     // Create Blob object
+  //     const blob = new Blob([arrayBuffer], { type: 'application/pdf' });
+
+  //     // Initialize PDF worker
+  //     pdfjs.GlobalWorkerOptions.workerSrc = pdfjsWorker;
+
+  //     // Convert PDF page to image
+  //     pdfjs.getDocument({ data: blob })
+  //       .promise
+  //       .then((pdf) => {
+  //         pdf.getPage(1).then((page) => {
+  //           const viewport = page.getViewport({ scale: 2 });
+  //           const canvas = document.createElement('canvas');
+  //           const context = canvas.getContext('2d');
+  //           canvas.height = viewport.height;
+  //           canvas.width = viewport.width;
+
+  //           const renderContext = {
+  //             canvasContext: context,
+  //             viewport: viewport,
+  //           };
+
+  //           // Render the PDF page into the canvas context
+  //           page.render(renderContext).promise
+  //             .then(() => {
+  //               // Convert canvas to data URL
+  //               const imageURL = canvas.toDataURL('image/png');
+
+  //               // Resolve with the image URL
+  //               resolve(imageURL);
+  //             })
+  //             .catch((error) => {
+  //               reject(error);
+  //             });
+  //         });
+  //       })
+  //       .catch((error) => {
+  //         reject(error);
+  //       });
+  //   });
+  // }
+
+  handleDownloadFile(url,fileName) {
+    if (this.getFileExtension(fileName) === 'pdf') {
+     let url1 = "data:application/pdf;base64," + url;
+     console.log(url1);
+      download(url1, fileName);
+    } else if(this.getFileExtension(fileName) === 'txt'){
+      let url1 = "data:text/plain;base64," + url;
+      console.log(url1);
+       download(url1, fileName);
+    } else {
+      alert("Not a valid Base64 PDF string. Please check");
+    }
+    // download(url);
+  }
+  
+  
+ 
+  
 
   render() {
     const {
@@ -1350,7 +1484,7 @@ handleUserFileUpload = (e) => {
                           {messagesList.map((n) => (
                             <div>
                               {data.id === n.id ? (
-                                <div className="row">
+                                <div className role="row">
                                   <div className="setRowForMessage">
                                     <div
                                       className={
@@ -1376,19 +1510,98 @@ handleUserFileUpload = (e) => {
                                               >
                                                 <div className="g0rxnol2 ln8gz9je ppled2lx">
                                                   <div className="imageDataSend m-1">
-                                                    {/* <img
-                                                      src={`data:application/pdf;base64,${p.buffer}`}
+                                                    <img
+                                                      src={`data:image/jpeg;base64,${p.buffer}`}
+                                                   
                                                       alt=""
                                                       className="setAgainImageForSend"
-                                                    /> */}
-                                                    <embed    src={`data:application/pdf;base64,${p.buffer}`}
-                                                      className="setAgainImageForSend"
-                                                    ></embed>
+                                                    />
+                                                    {/* <embed    src={this.convertToImageURL(p.singlePage)}
+                                                      className="setAgainImageForSend" 
+                                                          // src={`data:application/pdf;base64,${p.buffer}`}
+                                                    ></embed> */}
                                                   </div>
                                                 </div>
                                               </div>
                                             ))}
                                           </div>
+                                          <div className="DocumentSendData">
+  {n.fileDocument?.map((document) => {
+    if (this.getFileExtension(document.originalname) === 'pdf') {
+      return (
+        <div className="documentPdfSend">
+          <div className=""></div>
+          <div className="SendPdfData">
+            <div className="SendPdfDefine">
+              <div className="LogoPdf">
+                <div className="sxl192xd hbhfgwk1 fs6hn1up ekdr8vow icon-doc-pdf"></div>
+              </div>
+              <div className="NamePdf" style={{flexGrow:"1"}}>
+                 <div className="namePdfData">
+                  <span>{document.originalname}</span>
+                 </div>
+                 <div className="TotalPage">
+                  <span className="ShowData" title={`${document.totalPages}Pages`}>{document.totalPages}Pages</span>
+                  <span className="DotData">•</span>
+                  <span className="ShowData" title="PDF">PDF</span>
+                  <span className="DotData">•</span>
+                  <span className="ShowData" title={`${document.sizeKB}KB`}>{document.sizeKB}KB</span>
+                  <span className="DotData">•</span>
+                 </div>
+              </div>
+              <div className="DownLoadButton">
+                <div className="ButtonDownLoad">
+                  <span  onClick={() => this.handleDownloadFile(document.buffer,document.originalname)}
+                          style={{ cursor: 'pointer' }}>
+                    <svg viewBox="0 0 34 34" height="34" width="34" preserveAspectRatio="xMidYMid meet" class="" version="1.1" x="0px" y="0px" enable-background="new 0 0 34 34"><path fill="currentColor" d="M17,2c8.3,0,15,6.7,15,15s-6.7,15-15,15S2,25.3,2,17S8.7,2,17,2 M17,1C8.2,1,1,8.2,1,17 s7.2,16,16,16s16-7.2,16-16S25.8,1,17,1L17,1z"></path><path fill="currentColor" d="M22.4,17.5h-3.2v-6.8c0-0.4-0.3-0.7-0.7-0.7h-3.2c-0.4,0-0.7,0.3-0.7,0.7v6.8h-3.2 c-0.6,0-0.8,0.4-0.4,0.8l5,5.3c0.5,0.7,1,0.5,1.5,0l5-5.3C23.2,17.8,23,17.5,22.4,17.5z"></path></svg></span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+  else if (this.getFileExtension(document.originalname) === 'txt') {
+      return (
+        <div className="documentPdfSend">
+          <div className="SendPdfData">
+            <div className="SendPdfDefine">
+              <div className="LogoPdf">
+                <div className="sxl192xd hbhfgwk1 fs6hn1up ekdr8vow icon-doc-txt"></div>
+              </div>
+              <div className="NamePdf" style={{flexGrow:"1"}}>
+                 <div className="namePdfData">
+                  <span>{document.originalname}</span>
+                 </div>
+                 <div className="TotalPage">
+                  <span className="ShowData" title="TXT">TXT</span>
+                  <span className="DotData">•</span>
+                  <span className="ShowData" title={`${document.sizeKB}KB`} >{document.sizeKB}KB</span>
+                  <span className="DotData">•</span>
+                 </div>
+              </div>
+              <div className="DownLoadButton">
+                <div className="ButtonDownLoad">
+                  <span   onClick={() => this.handleDownloadFile(document.buffer,document.originalname)}
+                          style={{ cursor: 'pointer' }}>
+                    <svg viewBox="0 0 34 34" height="34" width="34" preserveAspectRatio="xMidYMid meet" class="" version="1.1" x="0px" y="0px" enable-background="new 0 0 34 34"><path fill="currentColor" d="M17,2c8.3,0,15,6.7,15,15s-6.7,15-15,15S2,25.3,2,17S8.7,2,17,2 M17,1C8.2,1,1,8.2,1,17 s7.2,16,16,16s16-7.2,16-16S25.8,1,17,1L17,1z"></path><path fill="currentColor" d="M22.4,17.5h-3.2v-6.8c0-0.4-0.3-0.7-0.7-0.7h-3.2c-0.4,0-0.7,0.3-0.7,0.7v6.8h-3.2 c-0.6,0-0.8,0.4-0.4,0.8l5,5.3c0.5,0.7,1,0.5,1.5,0l5-5.3C23.2,17.8,23,17.5,22.4,17.5z"></path></svg></span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+    return (
+      <div key={document.id}>
+        <h3>{document.name}</h3>
+        <p>Non-PDF file</p>
+        {/* Add additional content for non-PDF files if needed */}
+      </div>
+    );
+  })}
+</div>
+
                                         </div>
                                       </div>
                                     </div>
@@ -1400,22 +1613,6 @@ handleUserFileUpload = (e) => {
                             </div>
                           ))}
                         </div>
-                        {/* <div className="ImageClassText " style={{display:"flex",alignItems:"flex-end"}}>
-                               <div className="row">
-                                                {fileUrls.fileData?.map((p)=>(
-                                                 
-                                                <div className="classImageText" style={{width:"330px",height:"185px"}}>
-                                                    <div className="g0rxnol2 ln8gz9je ppled2lx">
-                                                        <div className="imageDataSend">
-                                                            <img src={`data:image/png;base64,${p.buffer}`} alt="" className='setAgainImageForSend' />
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                             
-                                                ))}
-                                                   </div>
-
-                                            </div> */}
                       </div>
                     </div>
                   </div>
@@ -2104,7 +2301,7 @@ handleUserFileUpload = (e) => {
                                     </button>
                                   </div>
 
-                                  <div className=""></div>
+                                
                                 </div>
                        
                                 {this.getFileExtension(documents[imgId].name) === "pdf" && (
@@ -2245,6 +2442,7 @@ handleUserFileUpload = (e) => {
                                           <div className="_1Pr6q">
 
 {this.getFileExtension(document.name) === 'pdf' &&(
+
     <>
     <div className="pdf-preview">
     <Document file={document} onLoadSuccess={this.onDocumentLoadSuccess}>

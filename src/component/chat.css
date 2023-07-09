@@ -1877,6 +1877,8 @@ cursor: pointer;
         flex-basis: auto;
         /* filter: blur(8px); */
         width: 100%;
+        overflow: hidden !important;
+
 }
 
 
@@ -2058,4 +2060,181 @@ min-height: 0px !important;
         font-size: 1.5rem;
         margin-top: 10px;
         margin-bottom: 10px;
+}
+
+
+.DocumentSendData{
+        padding-right: 3px;
+        padding-left: 3px;
+        padding-bottom:25px; 
+        width:336px ;
+        padding-top:3px ;
+        box-sizing: border-box;
+}
+
+
+.documentPdfSend{
+    margin: 2px;
+        border-top-right-radius: 6px;
+        border-top-left-radius: 6px;
+        cursor: pointer;
+        text-align: inherit;
+        overflow-y: hidden;
+        display: flex;
+        width: 100%;
+        color: inherit;
+        overflow-x: hidden;
+        flex-direction: column;
+        align-items: stretch;
+        box-sizing: border-box;
+}
+
+
+.SendPdfData{
+        border-bottom-right-radius: 6px;
+        border-top-right-radius: 0;
+        border-bottom-left-radius: 6px;
+        border-top-left-radius: 0;
+        background-color: #d1f4cc;
+        cursor: inherit;
+        overflow-y: hidden;
+        width: 100%;
+        overflow-x: hidden;
+        text-decoration: none;
+}
+
+.SendPdfDefine{
+        padding-left: 19px;
+        padding-right: 19px;
+        flex-grow: 0;
+        flex-direction: row;
+        align-items: flex-start;
+        display: flex;
+        min-height: 0;
+        flex-shrink: 1;
+        padding-top: 13px;
+        flex-basis: auto;
+        min-width: 0;
+        order: 0;
+        justify-self: auto;
+        align-self: auto;
+        justify-content: flex-start;
+        flex-wrap: nowrap;
+        padding-bottom: 13px;
+}
+
+
+.LogoPdf{
+        flex-grow: 0;
+        min-height: 0;
+        flex-shrink: 1;
+        flex-basis: auto;
+        min-width: 0;
+        order: 0;
+        justify-self: auto;
+        align-self: auto;
+        flex-wrap: nowrap;
+}
+
+.icon-doc-pdf {
+    background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADMAAAA8CAMAAAD8KXLNAAAAvVBMVEUAAAD3d3fxRkbyRkbyRkb3fn74g4PyRUX3lZXzRUXyRUX/RkbyQED3fn7zRUX2iYn/Rkb4lpb0cHDvQEDzRETzRkbzQEDzQkLzOzv////939/yODj2enr4kJD0UVHzPT38xMT92tr5lZX1ZGT+6+v4g4P1bW35m5v7yMj91dX3fn76sLD1XFz6qan//f36trb+5OT0VVX6rKz7vb3yNDT4iIj/9vb0TEz5o6PtTEzlRUXsYWHiNzfyRETsSEiKDgROAAAAFHRSTlMAH+Z5+80n+JHu0AWTv6w6CX3V/BbNCjoAAAHfSURBVHgB7daDsisxGMDxHNtftLZqu+//WDebOu1p08H1f7D8zRoIoferx4djXb4htYvXy7vrI32NXi4U8v6KjzcbFTcKer48bQplS3dYwyhbwhpGRTpGRZpGoNvzjUT6RkU6RkX6RiJNM7dUhE/2NYkVhDU2lCgIa6DxxNr0eathBPoab5re6xjJ1pkaRu2XmP8GiIzKCSrHAW9NiKhiwKnKsFkukRMOZaWCVnWZA7uGxEaZn6UDApBGYjz3ekDFZtrGoig1FRPwZXnoQoXL6p0qwSTjy9pdxdicG41K1ue8g6kwRiWLOPcHQDzO84aoE7N9M2SMWX1eD11hal0zNMQ8tzQ2c0UU75saBXB9zhMmTJthsyc2J7cTuIRSQQ5sxzRZK9oYN4x4VGXCDMtz14IDxiusntiM0SILQ6oG71umMLKcHTCL+rEL+qZe5iWUwta+hUwYz7btoCAHTCdJEgcTgKUxY84NfPwc1AihABhLM+x2N+c6oICXqWa5RJo8bTQ59x04YgJhYMvIMnnvfGtivxmsTdr0RbmNCca0ZjR7FCtGNnCcAd6aEIELyhLFABXb35qg62k59v9d9d/8MnN5fa75QFeXZ5qvN4SezzTPCKEn8et/p9vD49UT+gEdNgrQ89qG8QAAAABJRU5ErkJggg==);
+}
+
+.sxl192xd {
+    background-repeat: no-repeat;
+    /* background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADMAAAA8CAMAAAD8KXLNAAAAvVBMVEUAAAD3d3fxRkbyRkbyRkb3fn74g4PyRUX3lZXzRUXyRUX/RkbyQED3fn7zRUX2iYn/Rkb4lpb0cHDvQEDzRETzRkbzQEDzQkLzOzv////939/yODj2enr4kJD0UVHzPT38xMT92tr5lZX1ZGT+6+v4g4P1bW35m5v7yMj91dX3fn76sLD1XFz6qan//f36trb+5OT0VVX6rKz7vb3yNDT4iIj/9vb0TEz5o6PtTEzlRUXsYWHiNzfyRETsSEiKDgROAAAAFHRSTlMAH+Z5+80n+JHu0AWTv6w6CX3V/BbNCjoAAAHfSURBVHgB7daDsisxGMDxHNtftLZqu+//WDebOu1p08H1f7D8zRoIoferx4djXb4htYvXy7vrI32NXi4U8v6KjzcbFTcKer48bQplS3dYwyhbwhpGRTpGRZpGoNvzjUT6RkU6RkX6RiJNM7dUhE/2NYkVhDU2lCgIa6DxxNr0eathBPoab5re6xjJ1pkaRu2XmP8GiIzKCSrHAW9NiKhiwKnKsFkukRMOZaWCVnWZA7uGxEaZn6UDApBGYjz3ekDFZtrGoig1FRPwZXnoQoXL6p0qwSTjy9pdxdicG41K1ue8g6kwRiWLOPcHQDzO84aoE7N9M2SMWX1eD11hal0zNMQ8tzQ2c0UU75saBXB9zhMmTJthsyc2J7cTuIRSQQ5sxzRZK9oYN4x4VGXCDMtz14IDxiusntiM0SILQ6oG71umMLKcHTCL+rEL+qZe5iWUwta+hUwYz7btoCAHTCdJEgcTgKUxY84NfPwc1AihABhLM+x2N+c6oICXqWa5RJo8bTQ59x04YgJhYMvIMnnvfGtivxmsTdr0RbmNCca0ZjR7FCtGNnCcAd6aEIELyhLFABXb35qg62k59v9d9d/8MnN5fa75QFeXZ5qvN4SezzTPCKEn8et/p9vD49UT+gEdNgrQ89qG8QAAAABJRU5ErkJggg==); */
+}
+.hbhfgwk1 {
+    background-size: contain;
+}
+.fs6hn1up {
+    height: 30px;
+}
+.ekdr8vow {
+    width: 26px;
+}
+
+.NamePdf{
+        margin-right: 10px;
+        margin-left: 10px;
+        flex-grow: 0;
+        margin-top: 0;
+        min-height: 0;
+        margin-bottom: 0;
+        flex-shrink: 1;
+        flex-basis: auto;
+        min-width: 0;
+        order: 0;
+        justify-self: auto;
+        align-self: auto;
+        top: -2px;
+        position: relative;
+}
+
+
+.namePdfData{
+        -webkit-line-clamp: 2;
+        overflow-y: hidden;
+        word-break: break-all;
+        text-overflow: ellipsis;
+        overflow-x: hidden;
+        display: -webkit-box;
+        -webkit-box-orient: vertical;
+}
+
+.TotalPage{
+        padding-left: 0;
+        padding-right: 0;
+        color: #8696a0;
+        padding-top: 3px;
+        font-size: 0.6875rem;
+        height: 15px;
+        line-height: 15px;
+        padding-bottom: 3px;
+}
+
+.ShowData{
+        overflow-y: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        display: inline-block;
+        overflow-x: hidden;
+}
+
+.DotData{
+        margin-left: 4px;
+        margin-right: 4px;
+        margin-top: 0;
+        overflow-y: hidden;
+        margin-bottom: 0;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        display: inline-block;
+        overflow-x: hidden;
+}
+
+.DownLoadButton{
+        flex-grow: 0;
+        min-height: 0;
+        flex-shrink: 1;
+        flex-basis: auto;
+        min-width: 0;
+        order: 0;
+        justify-self: auto;
+        align-self: auto;
+        flex-wrap: nowrap;
+}
+
+.ButtonDownLoad{
+        width: 34px;
+        display: flex;
+        color: rgba(84,101,111,.5);
+        height: 34px;
+        align-items: center;
+        position: relative;
+        justify-content: center;
+}
+
+.icon-doc-txt {
+    background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADMAAAA8CAMAAAD8KXLNAAAAvVBMVEUAAACfsLihsrl5kJp4kJultrygsrl5j5uzv8Z4kJp4kJt1jZmhsrh4j5t0i6J4kJusucB5kJp5kJt5kJt/n59/mZlviJSzv8Wvu8H///91jZh4j5pzi5d3jpl5kJv6+vuhsrmuvMJ+lJ5yipaktLvAys/FztN7kZyaq7OJnaaNoKn+/v/7/P21wcfr7vDx8/Tt8fKHm6WVp6+RpK3f5OequL+DmKLP1tra4ON7kJtviJSesLduh5N1ipNrgYvfIttIAAAAGXRSTlMA0crm/Cgh+JHueZO/rAXNOvQX1AgK8X2QgEGk0gAAAcVJREFUeAHt1IWS2zAUBVAvM5T7BM/MYeb//6zeLIRBmh0o3ZBgjsiOHcf5dvvl5lDOnp3NfH44uzo/ED28v9wgXx/4cPTQO91Ad2fHjbcx06dzA7MxE7OJAbI3QNYG6MLeeCcX1gbo0t5geaaGFwbLMzNSZhvIwIg82kB8NFq0NhAfjxDNbLwIEBtEq+kys58wRpGLTK5hLDP6oPlv5DLz8qJtreOAQUUzol/KG2hhRJHE76nm1SSJWLKuxkk3X3bEhV41YUSL1FsJvgotMpfIb9MirheuGY9ct1JSWXHLRptrRIniAdGA2/MOotJ1y/pYLQ2SBgG36lQrUEhVF4PmXkluFqIuMWGNA3RsnUHYhmkK7FSnfaIOpukLOe9owYTb54aoF6MZCTEyUm+Kl465USgcMkAJIVXFFmbkYd+VXFsYHWAz8+1YmNDHLC5VvNDYiLxBFGNLnVQYmxhnFqCKU5BmRmc4AF+EL7eQOGIaL0ZyB6sKtOxhhQkfNLoX+VEgWfa6vl+8zOf7fopfNER6p2EplHj5VUppRgQKbw3i/7Pqv/mjzNmVrfnh3J5Zmu/PjnNnae4cx3m8fbq5Ms3N0+2j8ws7X1cWmnQE/gAAAABJRU5ErkJggg==);
 }
