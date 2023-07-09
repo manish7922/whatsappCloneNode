@@ -1,9 +1,12 @@
 var express = require("express");
 var app = express();
 const path = require("path"); 
-const { PDFDocument } = require('pdf-lib');
-const pdf2img = require('pdf2img');
+const  {PDF2Pic}  = require('pdf2pic');
 const fs = require("fs");
+const pdfjsLib = require('pdfjs-dist');
+const PDFParser = require('pdf-parse');
+const util = require('util');
+const stat = util.promisify(fs.stat);
 const http = require("http").createServer(app);
 const io = require("socket.io")(http, {
   cors: {
@@ -15,8 +18,7 @@ app.use(express.json());
 const multer = require('multer');
 const { v4: uuidv4 } = require('uuid')
 const upload = multer({ dest: 'uploads/' });
-// const fileUpload = require("express-fileupload");
-// app.use(fileUpload());
+
 app.use(function (req, res, next) {
   res.header("Access-Control-Allow-Origin", "*");
   res.header(
@@ -71,26 +73,83 @@ app.post('/upload', upload.array('files'), (req, res) => {
       io.emit('newFile', fileUrl);
         res.json(fileUrl);
       });
-
-      app.post('/uploadDocument', upload.array('documents'), (req, res) => {
+    app.post('/uploadDocument', upload.array('documents'), async (req, res) => {
         const body = req.body;
-        // console.log(uploadedFile);
-        let documents=req.files;
-        console.log(documents);
-        const documentData = req.files.map((file) => {
+        let documents = req.files;
+        // console.log(documents);
+        
+        const documentData = await Promise.all(req.files.map(async (file) => {
           const buffer = fs.readFileSync(file.path);
           const base64 = buffer.toString('base64');
-          return {
-            originalname: file.originalname,
-            buffer: base64,
-          };
-        });
-        console.log(documentData);
-        let fileUrl={id:+body.id,senderID:+body.senderID,addedOn:body.addedOn,fileData:documentData,messageType:body.messageType}
-      //   messagesList.push(fileUrl);
-        io.emit('newFile', fileUrl);
-          res.json(fileUrl);
+          const pageNumber = 1;
+          // if (file.mimetype !== 'application/pdf') {
+          //   console.log('Skipping non-PDF file:', file.originalname);
+          //   return null;
+          // }
+          // try {
+          //   const base64String = await pageToBase64(file.path, pageNumber);
+          //   const singlePage = base64String;
+          //   const stats = await stat(file.path);
+          //   const fileSizeKB = Math.ceil(stats.size / 1024);
+          //   const totalPages = await calculateTotalPages(file.path);
+          //   console.log(totalPages);
+          //   return {
+          //     originalname: file.originalname,
+          //     buffer: base64,
+          //     singlePage: singlePage,
+          //     sizeKB: fileSizeKB,
+          //     totalPages:totalPages,
+          //   };
+
+          try {
+            let base64String;
+            let singlePage;
+            let totalPages;
+        
+            if (file.mimetype === 'application/pdf') {
+              base64String = await pageToBase64(file.path, pageNumber);
+              singlePage = base64String;
+              totalPages = await calculateTotalPages(file.path);
+            } else if (file.mimetype === 'text/plain') {
+              base64String = base64; // Use the original base64 content for TXT files
+              singlePage = null;
+              totalPages = 1; // TXT files are treated as single-page documents
+            } else {
+              console.log('Skipping unsupported file:', file.originalname);
+              return null;
+            }
+        
+            const stats = await stat(file.path);
+            const fileSizeKB = Math.ceil(stats.size / 1024);
+        
+            return {
+              originalname: file.originalname,
+              buffer: base64,
+              singlePage: singlePage,
+              sizeKB: fileSizeKB,
+              totalPages: totalPages,
+            };
+          } catch (error) {
+            console.error(error);
+            return null; // Handle error case if necessary
+          }
+        }));
+      
+        const filteredDocumentData = documentData.filter((data) => data !== null);
+       
+        let fileUrl = {
+          id: +body.id,
+          senderID: +body.senderID,
+          addedOn: body.addedOn,
+          fileDocument: filteredDocumentData,
+          messageType: body.messageType,
+
+        };
+      
+        io.emit('newDocument', fileUrl);
+        res.json(fileUrl);
       });
+      
 
 io.on("connection", (socket) => {
     console.log("A user connected");
@@ -104,6 +163,26 @@ io.on("connection", (socket) => {
     });
   });
 
+  async function pageToBase64(pdfPath, pageNumber) {
+    const data = new Uint8Array(fs.readFileSync(pdfPath));
+    const pdf = await pdfjsLib.getDocument(data).promise;
+    const page = await pdf.getPage(pageNumber);
+    const pageData = await page.getTextContent();
+    const pageText = pageData.items.map(item => item.str).join('');
+    const base64 = Buffer.from(pageText).toString('base64');
+    return base64;
+  }
+
+  async function calculateTotalPages(filePath) {
+    const pdfBuffer = fs.readFileSync(filePath);
+    const pdfData = await PDFParser(pdfBuffer);
+    return pdfData.numpages;
+  }
+
+  
+  
+  
+  
   
 
   
