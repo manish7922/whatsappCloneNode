@@ -32,13 +32,36 @@ export default class ChatConversion extends Component {
     documents: [],
     numPages: null,
     currentPage:1,
-  };
-  socket = io("http://localhost:2411");
+    downloadStatus:{},
+    showImages:false,
+    imageDataes:[],
+     selectedIndex:0,
+     selectedImage:null,
+     showEmoji:false,
 
+     EmojiData:[
+      {Name:"Smileys & People",Emoji:["😀", "😃", "😄", "😁", "😆", "😅", "😂", "🤣", "😊", "😇", "🙂", "🙃","😉", "😌","😍","🥰", "😘", "😗", "😙", "😚", "😋", "😛", "😝", "😜", "🤪", "🤨", "🧐", "🤓", "😎"]},
+      {Name:"Animals & Nature",Emoji: ["🐶", "🐱", "🐭", "🐹", "🐰", "🦊", "🐻", "🐼", "🐻", "🐨", "🐯", "🦁", "🐮", "🐷", "🐽", "🐸", "🐵", "🙈", "🙉", "🙊", "🐒"]},
+      {Name:"Food & Drink",Emoji:["🍏", "🍎", "🍐", "🍊", "🍋", "🍌", "🍉", "🍇", "🍓",  "🍈", "🍒", "🍑", "🥭", "🍍", "🥥", "🥝", "🍅", "🍆", "🥑", "🥦", "🥬", "🥒", "🌶","🍺", "🍻", "🥂", "🍷",  "🥃", "🍸", "🍹", "🧉", "🍾"]},
+      {Name:"Activity",Emoji:["⚽️", "🏀", "🏈", "⚾️", "🥎", "🎾", "🏐", "🚵‍♂️", "🚴‍♀️", "🚴", "🚴‍♂️","🏋️‍♀️", "🏋️", "🏋️‍♂️", "🤼‍♀️", "🤼", "🤼‍♂️", "🤸‍♀️","⛹️‍♂️", "🤺", "🤾‍♀️"]},
+      {Name:"Travel & Places",Emoji:["🚗", "🚕", "🚙", "🚌", "🚎", "🏎", "🚓", "🚑", "🚒", "🦯", "🦽", "🦼", "🛴", "🚲", "🛵", "🏍", "🛺", "🏡", "🏘", "🏚", "🏗", "🏭", "🏢", "🏬", "🏣", "🏤", "🏥", "🏦", "🏨", "🏪", "🏫", "🏩", "💒", "🏛"]},
+      {Name:"Objects",Emoji:["⌚️", "📱", "📲", "💻", "⌨️", "🖥", "🖨", "🖱", "🖲", "🕹", "🗜", "💽", "💾", "💿", "📀", "📼", "📷", "📸", "📹", "🎥", "📽","🔧", "🔨", "⚒", "🛠", "⛏", "🔩", "⚙️"]},
+      {Name:"Symbols",Emoji:["❤️", "🧡", "💛", "💚", "💙", "💜", "🖤", "🤍", "🤎", "❤️","💔", "❣️", "💕", "💞", "💓", "💗", "💖", "💘", "💝", "💟", "☮️", "✝️", "☪️",  "🕉", "☸️", "✡️", "🔯", "🕎", "☯️", "☦️", "🛐" ]},
+      {Name:"Flags",Emoji:["🏳️", "🏴", "🏁", "🚩", "🏳️‍🌈", "🏳️", "🏴‍☠️", " 🎌","🏴󠁧󠁢󠁥󠁮󠁧󠁿", "🏴󠁧󠁢󠁳󠁣󠁴󠁿", "🏴󠁧󠁢󠁷󠁬󠁳󠁿",""]},
+     ],
+     selectedCategoryTitle: "Smileys & People",
+    //  messageContainerRef : React.createRef(),
+    //  shouldScrollToBottom : false,
+    showBottom:false,
+  };
+  socket = io("https://serverwhatsapp.onrender.com");
+
+  // messageContainerRef = React.createRef();
   fetchContacts = () => {
     axios
-      .get("http://localhost:2411/contacts")
+      .get("https://serverwhatsapp.onrender.com/contacts")
       .then((response) => {
+        console.log(response);
         this.setState({ contactList: response.data });
       })
       .catch((error) => {
@@ -48,7 +71,7 @@ export default class ChatConversion extends Component {
 
   fetchMessages = () => {
     axios
-      .get("http://localhost:2411/messages")
+      .get("https://serverwhatsapp.onrender.com/messages")
       .then((response) => {
         this.setState({ messagesList: response.data });
       })
@@ -60,46 +83,57 @@ export default class ChatConversion extends Component {
   componentDidMount() {
     this.fetchContacts();
     this.fetchMessages();
-    this.listenForNewMessages();
-    this.findUrlForImages();
-    this.findUrlForDocuments();
+    // this.scrollToBottom();
+    // this.listenForNewMessages();
+    // this.findUrlForImages();
+    // this.findUrlForDocuments();
+    this.socket.on('newMessage', this.listenForNewMessages);
+    this.socket.on('newFile', this.findUrlForImages);
+    this.socket.on('newDocument', this.findUrlForDocuments);
     pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.js`;
   }
-  listenForNewMessages = () => {
-    this.socket.on("newMessage", (message) => {
-      console.log(message);
-      this.setState((prevState) => ({
-        messagesList: [...prevState.messagesList, message],
-      }));
-    });
-  };
-  findUrlForDocuments=()=>{
-    this.socket.on("newDocument", (fileUrl) => {
-      console.log(fileUrl);
-      this.setState((prevState) => ({
-        messagesList: [...prevState.messagesList, fileUrl],
-      }));
-    });
+  componentWillUnmount() {
+    this.socket.off('newMessage', this.listenForNewMessages);
+    this.socket.off('newFile', this.findUrlForImages);
+    this.socket.off('newDocument', this.findUrlForDocuments);
   }
-  findUrlForImages = () => {
-    this.socket.on("newFile", (fileUrl) => {
-      console.log(fileUrl);
-      this.setState((prevState) => ({
-        messagesList: [...prevState.messagesList, fileUrl],
-      }));
-    });
+  listenForNewMessages = (message) => {
+    this.setState((prevState) => ({
+      messagesList: [...prevState.messagesList, message],
+    }));
+
   };
+  findUrlForDocuments=(fileUrl)=>{
+    this.setState((prevState) => ({
+      messagesList: [...prevState.messagesList, fileUrl],
+    }));
+  }
+  findUrlForImages=(fileUrl)=>{
+    this.setState((prevState) => ({
+      messagesList: [...prevState.messagesList, fileUrl],
+    }));
+  }
 
   componentDidUpdate(prevProps, prevState) {
     if (prevProps !== this.props) this.fetchContacts();
     if (prevProps !== this.props) this.fetchMessages();
+    // if (prevProps.messagesList !== this.state.messagesList) {
+    //   this.scrollToBottom();
+    // }
   }
+
+
 
   handleFile = () => {
     this.setState((prevState) => {
-      return { showFiles: !prevState.showFiles, showClose: true };
+      return { showFiles: !prevState.showFiles, showClose: true ,showEmoji:false};
     });
   };
+  handleEmoji=()=>{
+    this.setState((prevState) => {
+      return { showEmoji: !prevState.showEmoji,showFiles:false };
+    });
+  }
   handleClose = () => {
     this.setState((prevState) => {
       return { showClose: !prevState.showClose, files: [] };
@@ -130,9 +164,14 @@ export default class ChatConversion extends Component {
     });
   };
 
-
+  // scrollToBottom = () => {
+  //   if (this.messagesEndRef.current) {
+  //     this.messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+  //   }
+  // };
     
 handleUserDocumentFileUpload=(e)=>{
+  // debugger
   e.preventDefault();
   const { documents, previewUrls, fileUrls } = this.state;
   console.log(documents);
@@ -157,6 +196,7 @@ handleUserDocumentFileUpload=(e)=>{
   formData.append("senderID", msgId);
   formData.append("addedOn", date);
   formData.append("messageType", "file");
+  formData.append("text",this.state.form.msgSend)
 
   console.log(formData);
   this.postData("/uploadDocument", formData);
@@ -166,6 +206,7 @@ handleUserDocumentFileUpload=(e)=>{
     documents: [],
     showFiles: false,
     previewUrls: [],
+    form: { q: "", msgSend: "" } 
   });
 }
 
@@ -204,6 +245,7 @@ handleUserFileUpload = (e) => {
     showFiles: false,
     previewUrls: [],
   });
+  // this.scrollToBottom();
 };
 
   handleImageChange = (e) => {
@@ -284,8 +326,11 @@ handleUserFileUpload = (e) => {
       };
       console.log(json);
       this.postData1("/message", json);
+   
     }
-    this.setState({ form: { q: "", msgSend: "" } });
+  
+    this.setState({ form: { q: "", msgSend: "" },showEmoji:false,showBottom:true });
+    // this.scrollToBottom();
   };
 
   async postData1(url, obj) {
@@ -323,165 +368,69 @@ handleUserFileUpload = (e) => {
     return null;
   };
 
-
-  // convertToPDFURL=(singlePage)=> {
-  //   return new Promise((resolve, reject) => {
-  //     const base64Data = singlePage;
-  
-  //     // Convert Base64 to binary data
-  //     const binaryData = atob(base64Data);
-  //     const arrayBuffer = new ArrayBuffer(binaryData.length);
-  //     const uint8Array = new Uint8Array(arrayBuffer);
-  
-  //     for (let i = 0; i < binaryData.length; i++) {
-  //       uint8Array[i] = binaryData.charCodeAt(i);
-  //     }
-  
-  //     // Create Blob object
-  //     const blob = new Blob([arrayBuffer], { type: 'image/jpeg' });
-  
-  //     // Create URL for opening the PDF
-  //     const url = URL.createObjectURL(blob);
-  // console.log(url);
-  //     // Resolve with the PDF URL
-  //     resolve(url);
-  //   });
-  // }
-
-
-  // convertToImageURL(singlePage) {
-  //   return new Promise((resolve, reject) => {
-  //     const base64Data = singlePage;
-  
-  //     // Convert Base64 to binary data
-  //     const binaryData = atob(base64Data);
-  //     const arrayBuffer = new ArrayBuffer(binaryData.length);
-  //     const uint8Array = new Uint8Array(arrayBuffer);
-  
-  //     for (let i = 0; i < binaryData.length; i++) {
-  //       uint8Array[i] = binaryData.charCodeAt(i);
-  //     }
-  
-  //     // Create Blob object
-  //     const blob = new Blob([arrayBuffer], { type: 'application/pdf' });
-  
-  //     // Convert PDF page to image
-  //     const reader = new FileReader();
-  //     reader.onloadend = function () {
-  //       const pdfData = new Uint8Array(reader.result);
-  //       const loadingTask =pdfjs.getDocument({ data: pdfData });
-  //       loadingTask.promise
-  //         .then(function (pdf) {
-  //           // Fetch the first page
-  //           pdf.getPage(1).then(function (page) {
-  //             const scale = 2;
-  //             const viewport = page.getViewport({ scale });
-  //             const canvas = document.createElement('canvas');
-  //             const context = canvas.getContext('2d');
-  //             canvas.height = viewport.height;
-  //             canvas.width = viewport.width;
-  
-  //             const renderContext = {
-  //               canvasContext: context,
-  //               viewport: viewport,
-  //             };
-  
-  //             // Render the PDF page into the canvas context
-  //             const renderTask = page.render(renderContext);
-  //             renderTask.promise.then(function () {
-  //               // Convert canvas to data URL
-  //               const imageURL = canvas.toDataURL('image/png');
-  
-  //               // Resolve with the image URL
-  //               resolve(imageURL);
-  //             });
-  //           });
-  //         })
-  //         .catch(function (error) {
-  //           reject(error);
-  //         });
-  //     };
-  //     reader.readAsArrayBuffer(blob);
-  //   });
-  // }
-
-
-  // convertToImageURL(singlePage) {
-  //   return new Promise((resolve, reject) => {
-  //     const base64Data = singlePage;
-
-  //     // Convert Base64 to binary data
-  //     const binaryData = atob(base64Data);
-  //     const arrayBuffer = new ArrayBuffer(binaryData.length);
-  //     const uint8Array = new Uint8Array(arrayBuffer);
-
-  //     for (let i = 0; i < binaryData.length; i++) {
-  //       uint8Array[i] = binaryData.charCodeAt(i);
-  //     }
-
-  //     // Create Blob object
-  //     const blob = new Blob([arrayBuffer], { type: 'application/pdf' });
-
-  //     // Initialize PDF worker
-  //     pdfjs.GlobalWorkerOptions.workerSrc = pdfjsWorker;
-
-  //     // Convert PDF page to image
-  //     pdfjs.getDocument({ data: blob })
-  //       .promise
-  //       .then((pdf) => {
-  //         pdf.getPage(1).then((page) => {
-  //           const viewport = page.getViewport({ scale: 2 });
-  //           const canvas = document.createElement('canvas');
-  //           const context = canvas.getContext('2d');
-  //           canvas.height = viewport.height;
-  //           canvas.width = viewport.width;
-
-  //           const renderContext = {
-  //             canvasContext: context,
-  //             viewport: viewport,
-  //           };
-
-  //           // Render the PDF page into the canvas context
-  //           page.render(renderContext).promise
-  //             .then(() => {
-  //               // Convert canvas to data URL
-  //               const imageURL = canvas.toDataURL('image/png');
-
-  //               // Resolve with the image URL
-  //               resolve(imageURL);
-  //             })
-  //             .catch((error) => {
-  //               reject(error);
-  //             });
-  //         });
-  //       })
-  //       .catch((error) => {
-  //         reject(error);
-  //       });
-  //   });
-  // }
-
   handleDownloadFile(url,fileName) {
     if (this.getFileExtension(fileName) === 'pdf') {
      let url1 = "data:application/pdf;base64," + url;
      console.log(url1);
       download(url1, fileName);
+      this.setState(prevState => ({
+        downloadStatus: {
+          ...prevState.downloadStatus,
+          [fileName]: true
+        }
+      }));
     } else if(this.getFileExtension(fileName) === 'txt'){
       let url1 = "data:text/plain;base64," + url;
       console.log(url1);
        download(url1, fileName);
+       this.setState(prevState => ({
+        downloadStatus: {
+          ...prevState.downloadStatus,
+          [fileName]: true
+        }
+      }));
     } else {
       alert("Not a valid Base64 PDF string. Please check");
     }
     // download(url);
   }
-  
-  
- 
-  
+
+  handleImageOpen=(p,index)=>{
+    console.log("hyyyt",p);
+    console.log("hy",index);
+    const fileData = Array.isArray(p) ? p : [p];
+    this.setState({
+      showImages:true,  
+      imageDataes: fileData,
+      selectedIndex: index,
+      selectedImage: p.buffer
+    })  
+  }
+
+  handleCloseImage=()=>{
+    this.setState({showImages:false})
+  }
+  selectedImage=(i)=>{
+    this.setState({ selectedImage: i });
+  }
+
+
+  handleEmojiClick = (emoji) => {
+    console.log("Selected Emoji:", emoji);
+    // this.setState({ msgSend: this.state.msgSend + emoji });
+    this.setState((prevState) => ({
+      form: { ...prevState.form, msgSend: prevState.form.msgSend + emoji }, // Append the selected emoji to the input value
+    }));
+  };
+  handleCategoryClick = (categoryTitle) => {
+    console.log("categoryTitle:",categoryTitle);
+this.setState({selectedCategoryTitle:categoryTitle})
+  }
 
   render() {
     const {
+      showImages,
+      showButton,
       view,
       id,
       data,
@@ -499,15 +448,20 @@ handleUserFileUpload = (e) => {
       imgId,
       showClose,
       numPages,
-      currentPage
+      currentPage,
+      imageDataes,
+      selectedIndex,
+      selectedImage,
+      showEmoji,
+      EmojiData,
+      selectedCategoryTitle,
+      showBottom,
     } = this.state;
     const { q, msgSend } = this.state.form;
-    console.log(this.state.data?.name);
+    const { downloadStatus } = this.state;
+    let emojiData1=EmojiData.filter((n)=>n.Name===selectedCategoryTitle);
+    // console.log(this.state.data?.name);
     let imgData = previewUrls[imgId];
-    console.log(files);
-    // console.log(fileUrls);
-    console.log(previewUrls);
-    console.log(messagesList);
     return view === 0 ? (
       <div className="_1Fm4m">
         <div className="_1jJ70">
@@ -960,7 +914,124 @@ handleUserFileUpload = (e) => {
       </div>
     ) : view === 1 ? (
       <div className="_1Fm4m">
-        <div className="_1jJ70">
+  {showImages && (    <span>
+    <div className="ImageSetView" >
+<div>
+<div className="_3GUJh">
+<div className="_27n9o">
+<div className="_1P0Vh">
+  <div className="_1s0h2"></div>
+  <div className="_2nI8K"></div>
+  <div className="SetImagesClick">
+    <div className="ImageClickOpen">
+      <div className="p357zi0d lhggkp7q mf2g8abl lrw9n60e"></div>
+    </div>
+    <div className="ImageOpenClick">
+      <div className="SetImageFor">
+        {imageDataes.map((p,index)=>(
+ <div className="MapedImage" onClick={()=>this.selectedImage(p.buffer)}>
+       <img
+              key={index}
+              src={`data:image/jpeg;base64,${p.buffer}`}
+              alt=""
+             
+            />
+ </div>
+        ))}
+       
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+</div>
+<div className="">
+  <div className="overlay _3hM62">
+    <div className="_2gZs6">
+      <div className="_3hEWf">
+        <div className="_199zF KStWd _2qktw">
+          <div className="_1AHcd">
+<div className="_13jwn">
+  <div className="ImageLocoSet" style={{height:"40px",width:"40px"}}>
+    <div className="DataSetImageLoco">
+      <span><svg viewBox="0 0 212 212" height="212" width="212" preserveAspectRatio="xMidYMid meet" class="ln8gz9je ppled2lx" version="1.1" x="0px" y="0px" enable-background="new 0 0 212 212" ><path fill="#DFE5E7" class="background" d="M106.251,0.5C164.653,0.5,212,47.846,212,106.25S164.653,212,106.25,212C47.846,212,0.5,164.654,0.5,106.25 S47.846,0.5,106.251,0.5z"></path><g><path fill="#FFFFFF" class="primary" d="M173.561,171.615c-0.601-0.915-1.287-1.907-2.065-2.955c-0.777-1.049-1.645-2.155-2.608-3.299 c-0.964-1.144-2.024-2.326-3.184-3.527c-1.741-1.802-3.71-3.646-5.924-5.47c-2.952-2.431-6.339-4.824-10.204-7.026 c-1.877-1.07-3.873-2.092-5.98-3.055c-0.062-0.028-0.118-0.059-0.18-0.087c-9.792-4.44-22.106-7.529-37.416-7.529 s-27.624,3.089-37.416,7.529c-0.338,0.153-0.653,0.318-0.985,0.474c-1.431,0.674-2.806,1.376-4.128,2.101 c-0.716,0.393-1.417,0.792-2.101,1.197c-3.421,2.027-6.475,4.191-9.15,6.395c-2.213,1.823-4.182,3.668-5.924,5.47 c-1.161,1.201-2.22,2.384-3.184,3.527c-0.964,1.144-1.832,2.25-2.609,3.299c-0.778,1.049-1.464,2.04-2.065,2.955 c-0.557,0.848-1.033,1.622-1.447,2.324c-0.033,0.056-0.073,0.119-0.104,0.174c-0.435,0.744-0.79,1.392-1.07,1.926 c-0.559,1.068-0.818,1.678-0.818,1.678v0.398c18.285,17.927,43.322,28.985,70.945,28.985c27.678,0,52.761-11.103,71.055-29.095 v-0.289c0,0-0.619-1.45-1.992-3.778C174.594,173.238,174.117,172.463,173.561,171.615z"></path><path fill="#FFFFFF" class="primary" d="M106.002,125.5c2.645,0,5.212-0.253,7.68-0.737c1.234-0.242,2.443-0.542,3.624-0.896 c1.772-0.532,3.482-1.188,5.12-1.958c2.184-1.027,4.242-2.258,6.15-3.67c2.863-2.119,5.39-4.646,7.509-7.509 c0.706-0.954,1.367-1.945,1.98-2.971c0.919-1.539,1.729-3.155,2.422-4.84c0.462-1.123,0.872-2.277,1.226-3.458 c0.177-0.591,0.341-1.188,0.49-1.792c0.299-1.208,0.542-2.443,0.725-3.701c0.275-1.887,0.417-3.827,0.417-5.811 c0-1.984-0.142-3.925-0.417-5.811c-0.184-1.258-0.426-2.493-0.725-3.701c-0.15-0.604-0.313-1.202-0.49-1.793 c-0.354-1.181-0.764-2.335-1.226-3.458c-0.693-1.685-1.504-3.301-2.422-4.84c-0.613-1.026-1.274-2.017-1.98-2.971 c-2.119-2.863-4.646-5.39-7.509-7.509c-1.909-1.412-3.966-2.643-6.15-3.67c-1.638-0.77-3.348-1.426-5.12-1.958 c-1.181-0.355-2.39-0.655-3.624-0.896c-2.468-0.484-5.035-0.737-7.68-0.737c-21.162,0-37.345,16.183-37.345,37.345 C68.657,109.317,84.84,125.5,106.002,125.5z"></path></g></svg></span>
+    </div>
+  </div>
+</div>
+          </div>
+          <div className="_8nE1Y">
+            <div className="y_sn4">
+              <div className="_21S-L">
+                <div className="TextYOU">You</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div className="_2eIcs">
+        <div className="_3qNGb _2XdMx">
+          <div className="_3OtEr">
+            <div className="DataSend">
+              <span><svg viewBox="0 0 24 24" height="24" width="24" preserveAspectRatio="xMidYMid meet" class="" version="1.1" x="0px" y="0px" enable-background="new 0 0 24 24"><path fill="currentColor" d="M19.2,4H4.8C3.8,4,3,4.8,3,5.8V22l3.6-3.6h12.6c1,0,1.8-0.8,1.8-1.8V5.8C21,4.8,20.2,4,19.2,4z M19.2,16.6 H6.6l-1.8,1.8V5.8h14.4V16.6z"></path></svg></span>
+            </div>
+          </div>
+          <div className="_3OtEr">
+            <div className="DataSend">
+              <span><svg viewBox="0 0 24 24" height="24" width="24" preserveAspectRatio="xMidYMid meet" class="" version="1.1" x="0px" y="0px" enable-background="new 0 0 24 24" ><path fill="currentColor" d="M11.1,16.8l-4.4,3.1C6,20.4,5.2,19.8,5.4,19L7,13.9c0.1-0.3,0-0.7-0.3-0.9L2.4,9.7C1.8,9.3,2.1,8.3,2.9,8.3 l5.4-0.1C8.6,8.2,8.9,8,9,7.6l1.8-5.1c0.2-0.7,1.3-0.7,1.5,0l1.8,5.1c0.1,0.3,0.4,0.5,0.7,0.5l5.4,0.1c0.8,0,1.1,1,0.5,1.4L16.4,13 c-0.3,0.2-0.4,0.5-0.3,0.9l1.6,5.2c0.2,0.7-0.6,1.3-1.2,0.9L12,16.8C11.7,16.6,11.4,16.6,11.1,16.8z"></path></svg></span>
+            </div>
+          </div>
+          <div className="_3OtEr">
+            <div className="DataSend">
+              <span><svg viewBox="0 0 15 15" width="20" preserveAspectRatio="xMidYMid meet" class="" fill="none"><path fill-rule="evenodd" clip-rule="evenodd" d="M0 7.5C0 11.6305 3.36946 15 7.5 15C11.6527 15 15 11.6305 15 7.5C15 3.36946 11.6305 0 7.5 0C3.36946 0 0 3.36946 0 7.5ZM10.995 8.69333C11.1128 8.67863 11.2219 8.66503 11.3211 8.65309C11.61 8.63028 11.8076 8.91918 11.6784 9.13965C10.8573 10.6374 9.29116 11.793 7.50455 11.793C5.71794 11.793 4.15181 10.6602 3.33072 9.16246C3.18628 8.91918 3.37634 8.63028 3.66524 8.65309C3.79123 8.66749 3.93521 8.68511 4.09426 8.70457C4.94292 8.80842 6.22074 8.96479 7.48174 8.96479C8.81855 8.96479 10.1378 8.80025 10.995 8.69333ZM5.41405 7.37207C6.05761 7.37207 6.60923 6.72851 6.60923 6.02978C6.60923 5.30348 6.05761 4.6875 5.41405 4.6875C4.77048 4.6875 4.21886 5.33106 4.21886 6.02978C4.20967 6.75609 4.77048 7.37207 5.41405 7.37207ZM10.7807 6.05619C10.7807 6.74114 10.24 7.37201 9.60912 7.37201C8.97825 7.37201 8.4375 6.76818 8.4375 6.05619C8.4375 5.37124 8.97825 4.74037 9.60912 4.74037C10.24 4.74037 10.7807 5.34421 10.7807 6.05619Z" fill="currentColor"></path></svg></span>
+            </div>
+          </div>
+          <div className="_3OtEr">
+            <div className="DataSend">
+              <span><svg viewBox="0 0 24 24" height="24" width="24" preserveAspectRatio="xMidYMid meet" class="" version="1.1" x="0px" y="0px" enable-background="new 0 0 24 24" ><path fill="currentColor" d="M14.278,4.813c0-0.723,0.873-1.085,1.383-0.574l6.045,6.051 c0.317,0.317,0.317,0.829,0,1.146l-6.045,6.051c-0.51,0.51-1.383,0.149-1.383-0.574v-2.732c-5.096,0-8.829,1.455-11.604,4.611 c-0.246,0.279-0.702,0.042-0.602-0.316C3.502,13.303,6.997,8.472,14.278,7.431V4.813z"></path></svg></span>
+            </div>
+          </div>
+          <div className="_3OtEr">
+            <div className="DataSend">
+              <span><svg viewBox="0 0 24 24" height="24" width="24" preserveAspectRatio="xMidYMid meet" class="" version="1.1" x="0px" y="0px" enable-background="new 0 0 24 24" ><path fill="currentColor" d="M18.9,10.3h-4V4.4H9v5.9H5l6.9,6.9L18.9,10.3z M5.1,19.2v2H19v-2H5.1z"></path></svg></span>
+            </div>
+          </div>
+          <div className="_3OtEr">
+            <div className="DataSend" onClick={()=>this.handleCloseImage()}>
+              <span><svg viewBox="0 0 24 24" height="24" width="24" preserveAspectRatio="xMidYMid meet" class="" version="1.1" x="0px" y="0px" enable-background="new 0 0 24 24" ><path fill="currentColor" d="M19.8,5.8l-1.6-1.6L12,10.4L5.8,4.2L4.2,5.8l6.2,6.2l-6.2,6.2l1.6,1.6l6.2-6.2l6.2,6.2l1.6-1.6L13.6,12 L19.8,5.8z"></path></svg></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div className="_1OVaT">
+      <div className="_1I-Pt">
+        <div className="ABcde" style={{position:"relative",width:"200px",height:"200px"}}>
+          <div className="def">
+            <div className="deef">
+              <div className="DateFeedImage">
+                <div className="_2pktu _2MmTH _3VqhE">
+                  <div className="" style={{position:"relative",width:"200px",height:"200px"}}>
+                    <div className="_1oyAw">
+                      <img className="_6-lnD" 
+                      src={`data:image/jpeg;base64,${selectedImage}`}
+                      // src={selectedIndex}
+                       alt="" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div></div>
+</div>
+    </div>
+  </span>)}
+   {!showImages && (    <div className="_1jJ70">
           <div className="_2Ts6i _3RGKj">
             <header className="g0rxnol2 ercejckq cm280p3y p357zi0d gndfcl4n kcgo1i74 ln8gz9je e8h85j61 emrlamx0 aiput80m lyvj5e2u l9g3jx6n f6ipylw5">
               <div className="_3WByx">
@@ -1351,7 +1422,7 @@ handleUserFileUpload = (e) => {
           <div className="_2Ts6i1 _2xAQV">
             <div className="secondPart">
               <div
-                className="secondPartShowData"
+                className="lhggkp7q qq0sjtgm tkdu00h0 ln8gz9je ppled2lx tbmiozwh fq1kqmrp shnvsdv4"
                 data-asset-chat-background-dark="true"
                 style={{ opacity: "1.5" }}
               ></div>
@@ -1469,7 +1540,7 @@ handleUserFileUpload = (e) => {
                 <span className="nfki698u tvf2evcx oq44ahr5 lb5m6g5c"></span>
                 <div className="middlePArt">
                   <div className="middlePArtView">
-                    <div className="middlePArtMain" tabIndex="0">
+                    <div className={`middlePArtMain ${showBottom ? "middlePart1":""}`} tabIndex="0" >
                       <div className="FdUCm"></div>
                       <div className="showDataTop dataTop">
                         <div className="topDataAgain TopData">
@@ -1495,12 +1566,19 @@ handleUserFileUpload = (e) => {
                                     >
                                       <span></span>
                                       <div className="textClass classText">
+                                      <span data-testid="tail-out" data-icon="tail-out" class="p0s8B"><svg viewBox="0 0 8 13" height="13" width="8" preserveAspectRatio="xMidYMid meet" class="" version="1.1" x="0px" y="0px" enable-background="new 0 0 8 13" ><path opacity="0.13" d="M5.188,1H0v11.193l6.467-8.625 C7.526,2.156,6.958,1,5.188,1z"></path><path fill="currentColor" d="M5.188,0H0v11.193l6.467-8.625C7.526,1.156,6.958,0,5.188,0z"></path></svg></span>
                                         <div className="setAgainText textagainSet">
-                                          <div className="nameSetForText">
+                                   {n.text &&(       <div className="nameSetForText">
                                             <span> {n.text}</span>
-                                          </div>
+                                           <span>
+                                            <span className="FreePadding">
+                                              <span className="tvf2evcx oq44ahr5 qg8w82as"></span>
+                                            <span className="tvf2evcx oq44ahr5">{n.addedOn}</span>
+                                            </span>
+                                           </span>
+                                          </div>)}
                                           <div className="ImageClassText ">
-                                            {n.fileData?.map((p) => (
+                                            {n.fileData?.map((p,index) => (
                                               <div
                                                 className="classImageText"
                                                 style={{
@@ -1509,27 +1587,29 @@ handleUserFileUpload = (e) => {
                                                 }}
                                               >
                                                 <div className="g0rxnol2 ln8gz9je ppled2lx">
-                                                  <div className="imageDataSend m-1">
+                                                  <div className="imageDataSend m-1" onClick={()=>this.handleImageOpen(p,index)}>
                                                     <img
                                                       src={`data:image/jpeg;base64,${p.buffer}`}
                                                    
                                                       alt=""
                                                       className="setAgainImageForSend"
                                                     />
-                                                    {/* <embed    src={this.convertToImageURL(p.singlePage)}
-                                                      className="setAgainImageForSend" 
-                                                          // src={`data:application/pdf;base64,${p.buffer}`}
-                                                    ></embed> */}
+                                      
                                                   </div>
                                                 </div>
                                               </div>
                                             ))}
+ 
                                           </div>
+                                          { n.fileDocument && n.fileDocument.length >= 1 ? (
                                           <div className="DocumentSendData">
   {n.fileDocument?.map((document) => {
+    const showButton = !downloadStatus[document.originalname];
     if (this.getFileExtension(document.originalname) === 'pdf') {
       return (
-        <div className="documentPdfSend">
+        <>
+        <div className="documentPdfSend" onClick={() => this.handleDownloadFile(document.buffer,document.originalname)}
+        style={{ cursor: 'pointer' }}>
           <div className=""></div>
           <div className="SendPdfData">
             <div className="SendPdfDefine">
@@ -1550,20 +1630,30 @@ handleUserFileUpload = (e) => {
                  </div>
               </div>
               <div className="DownLoadButton">
+              {showButton&& (  
                 <div className="ButtonDownLoad">
                   <span  onClick={() => this.handleDownloadFile(document.buffer,document.originalname)}
                           style={{ cursor: 'pointer' }}>
                     <svg viewBox="0 0 34 34" height="34" width="34" preserveAspectRatio="xMidYMid meet" class="" version="1.1" x="0px" y="0px" enable-background="new 0 0 34 34"><path fill="currentColor" d="M17,2c8.3,0,15,6.7,15,15s-6.7,15-15,15S2,25.3,2,17S8.7,2,17,2 M17,1C8.2,1,1,8.2,1,17 s7.2,16,16,16s16-7.2,16-16S25.8,1,17,1L17,1z"></path><path fill="currentColor" d="M22.4,17.5h-3.2v-6.8c0-0.4-0.3-0.7-0.7-0.7h-3.2c-0.4,0-0.7,0.3-0.7,0.7v6.8h-3.2 c-0.6,0-0.8,0.4-0.4,0.8l5,5.3c0.5,0.7,1,0.5,1.5,0l5-5.3C23.2,17.8,23,17.5,22.4,17.5z"></path></svg></span>
                 </div>
+                )}
               </div>
             </div>
           </div>
         </div>
+        <div className="TextData">
+<div className="dataTxPDf">
+  <span className="pdfText">{document.Messagetext}</span>
+</div>
+        </div>
+      </>
       );
     }
   else if (this.getFileExtension(document.originalname) === 'txt') {
       return (
-        <div className="documentPdfSend">
+        <>
+        <div className="documentPdfSend" onClick={() => this.handleDownloadFile(document.buffer,document.originalname)}
+        style={{ cursor: 'pointer' }}>
           <div className="SendPdfData">
             <div className="SendPdfDefine">
               <div className="LogoPdf">
@@ -1581,15 +1671,22 @@ handleUserFileUpload = (e) => {
                  </div>
               </div>
               <div className="DownLoadButton">
-                <div className="ButtonDownLoad">
+              {showButton&& (  <div className="ButtonDownLoad">
                   <span   onClick={() => this.handleDownloadFile(document.buffer,document.originalname)}
                           style={{ cursor: 'pointer' }}>
                     <svg viewBox="0 0 34 34" height="34" width="34" preserveAspectRatio="xMidYMid meet" class="" version="1.1" x="0px" y="0px" enable-background="new 0 0 34 34"><path fill="currentColor" d="M17,2c8.3,0,15,6.7,15,15s-6.7,15-15,15S2,25.3,2,17S8.7,2,17,2 M17,1C8.2,1,1,8.2,1,17 s7.2,16,16,16s16-7.2,16-16S25.8,1,17,1L17,1z"></path><path fill="currentColor" d="M22.4,17.5h-3.2v-6.8c0-0.4-0.3-0.7-0.7-0.7h-3.2c-0.4,0-0.7,0.3-0.7,0.7v6.8h-3.2 c-0.6,0-0.8,0.4-0.4,0.8l5,5.3c0.5,0.7,1,0.5,1.5,0l5-5.3C23.2,17.8,23,17.5,22.4,17.5z"></path></svg></span>
                 </div>
+              )}
               </div>
             </div>
           </div>
         </div>
+        <div className="TextData">
+<div className="dataTxPDf">
+  <span className="pdfText">{document.Messagetext}</span>
+</div>
+        </div>
+        </>
       );
     }
     return (
@@ -1600,8 +1697,16 @@ handleUserFileUpload = (e) => {
       </div>
     );
   })}
-</div>
-
+</div> ):null}
+<div className="timeChange">
+                                              <div className="ChangeTime">
+                                                <span className="timeSetView">{n.addedOn}</span>
+                                              <div className="doubleTick">
+                                              <span data-testid="msg-dblcheck" aria-label=" Delivered " data-icon="msg-dblcheck" class=""><svg viewBox="0 0 16 11" height="11" width="16" preserveAspectRatio="xMidYMid meet" class="" fill="none"><path d="M11.0714 0.652832C10.991 0.585124 10.8894 0.55127 10.7667 0.55127C10.6186 0.55127 10.4916 0.610514 10.3858 0.729004L4.19688 8.36523L1.79112 6.09277C1.7488 6.04622 1.69802 6.01025 1.63877 5.98486C1.57953 5.95947 1.51817 5.94678 1.45469 5.94678C1.32351 5.94678 1.20925 5.99544 1.11192 6.09277L0.800883 6.40381C0.707784 6.49268 0.661235 6.60482 0.661235 6.74023C0.661235 6.87565 0.707784 6.98991 0.800883 7.08301L3.79698 10.0791C3.94509 10.2145 4.11224 10.2822 4.29844 10.2822C4.40424 10.2822 4.5058 10.259 4.60313 10.2124C4.70046 10.1659 4.78086 10.1003 4.84434 10.0156L11.4903 1.59863C11.5623 1.5013 11.5982 1.40186 11.5982 1.30029C11.5982 1.14372 11.5348 1.01888 11.4078 0.925781L11.0714 0.652832ZM8.6212 8.32715C8.43077 8.20866 8.2488 8.09017 8.0753 7.97168C7.99489 7.89128 7.8891 7.85107 7.75791 7.85107C7.6098 7.85107 7.4892 7.90397 7.3961 8.00977L7.10411 8.33984C7.01947 8.43717 6.97715 8.54508 6.97715 8.66357C6.97715 8.79476 7.0237 8.90902 7.1168 9.00635L8.1959 10.0791C8.33132 10.2145 8.49636 10.2822 8.69102 10.2822C8.79681 10.2822 8.89838 10.259 8.99571 10.2124C9.09304 10.1659 9.17556 10.1003 9.24327 10.0156L15.8639 1.62402C15.9358 1.53939 15.9718 1.43994 15.9718 1.32568C15.9718 1.1818 15.9125 1.05697 15.794 0.951172L15.4386 0.678223C15.3582 0.610514 15.2587 0.57666 15.1402 0.57666C14.9964 0.57666 14.8715 0.635905 14.7657 0.754395L8.6212 8.32715Z" fill="currentColor"></path></svg></span>
+                                              </div>
+                                              </div>
+                                            </div>
+                                        
                                         </div>
                                       </div>
                                     </div>
@@ -1612,8 +1717,11 @@ handleUserFileUpload = (e) => {
                               )}
                             </div>
                           ))}
+                              {/* <div ref={this.state.messagesEndRef} /> */}
+
                         </div>
                       </div>
+                 
                     </div>
                   </div>
                 </div>
@@ -1629,7 +1737,7 @@ handleUserFileUpload = (e) => {
                         <div className="footerClass">
                           <div className="emojiSet FileSet">
                             <div className="emojiSetAgain">
-                              <button className="emojibtn">
+                              <button className="emojibtn" onClick={()=>this.handleEmoji()}>
                                 <div className="btnSet1">
                                   <span>
                                     <svg
@@ -1651,6 +1759,83 @@ handleUserFileUpload = (e) => {
                                   </span>
                                 </div>
                               </button>
+                              {showEmoji && (
+                                <span>
+                                  <div className="_2sDI2 _1qj0V" style={{transformOrigin:"rightBottom",transform:"scale(1)",opacity:"1"}}>
+                                    <ul className="_3bcLp"> 
+                                    <div className="_38x63 _157v1">
+                                      <div className="gm3we2i2">
+                                        <div className="EmojiBarSet">
+                                        {/* <div data-test-id="menu-tab-marker" class="c8hu6guh p4t1lx4y k46w8fxw lhggkp7q jxacihee tukmaf4q futycye9 bs7a17vp lfg8udxz" style={{width: "11.1111%", transform:" translateX(100%)", height: "4px"}}></div> */}
+                                        {/* <div role="button"  class={selectedCategoryTitle==="Smileys & People" ? "_34i1y _3_x6w IHDJG":"_34i1y IHDJG"} title="Recent" tabindex="0">
+                                          <span ><svg viewBox="0 0 24 24" height="24" width="24" preserveAspectRatio="xMidYMid meet" class="" version="1.1"><path d="M20.5378905,11.9748276 C20.5378905,7.24555819 16.704097,3.41176471 11.9748276,3.41176471 C7.24555819,3.41176471 3.41176471,7.24555819 3.41176471,11.9748276 C3.41176471,16.704097 7.24555819,20.5378905 11.9748276,20.5378905 C16.704097,20.5378905 20.5378905,16.704097 20.5378905,11.9748276 Z M21.9496552,11.9748276 C21.9496552,17.4837931 17.4837931,21.9496552 11.9748276,21.9496552 C6.46586207,21.9496552 2,17.4837931 2,11.9748276 C2,6.46586207 6.46586207,2 11.9748276,2 C17.4837931,2 21.9496552,6.46586207 21.9496552,11.9748276 Z M12.1176471,6.70588235 L12.1176471,12.396898 L16.5044771,15.0244548 C16.8389217,15.2247753 16.9476508,15.6582881 16.7473302,15.9927327 C16.5470097,16.3271773 16.1134969,16.4359063 15.7790523,16.2355858 L10.7058824,13.1969356 L10.7058824,6.70588235 C10.7058824,6.31603429 11.0219166,6 11.4117647,6 C11.8016128,6 12.1176471,6.31603429 12.1176471,6.70588235 Z" fill="currentColor" fill-rule="nonzero"></path></svg>
+                                        </span></div> */} 
+                                        <div role="button" class={selectedCategoryTitle==="Smileys & People" ? "_34i1y _3_x6w IHDJG":"_34i1y IHDJG"} title="Smileys & People" tabindex="0" onClick={() => this.handleCategoryClick("Smileys & People")}>
+                                          <span  class=""><svg viewBox="0 0 24 24" height="24" width="24" preserveAspectRatio="xMidYMid meet" class="" version="1.1" x="0px" y="0px" enable-background="new 0 0 24 24" ><path fill="currentColor" d="M12,22.1C6.4,22.1,1.9,17.6,1.9,12S6.4,1.9,12,1.9S22.1,6.4,22.1,12S17.6,22.1,12,22.1z M12,3.5 c-4.7,0-8.5,3.8-8.5,8.5s3.8,8.5,8.5,8.5s8.5-3.8,8.5-8.5S16.7,3.5,12,3.5z"></path><path fill="currentColor" d="M8.9,11.6c0.7,0,1.3-0.7,1.3-1.5S9.6,8.6,8.9,8.6s-1.3,0.7-1.3,1.5C7.6,10.9,8.2,11.6,8.9,11.6z"></path><path fill="currentColor" d="M17.1,13.6c-1.1,0.1-3,0.4-5,0.4s-4-0.3-5-0.4c-0.4,0-0.6,0.3-0.4,0.7c1.1,2,3.1,3.5,5.5,3.5 c2.3,0,4.4-1.5,5.5-3.5C17.8,14,17.5,13.6,17.1,13.6z M12.3,16c-2.6,0-4.1-1-4.2-1.6c0,0,4.4,0.9,8,0C16.1,14.4,15.6,16,12.3,16z"></path><path fill="currentColor" d="M15.1,11.6c0.7,0,1.3-0.7,1.3-1.5s-0.6-1.5-1.3-1.5s-1.3,0.7-1.3,1.5C13.8,10.9,14.4,11.6,15.1,11.6z"></path></svg>
+                                          </span></div>
+                                       
+                                        <div role="button" class={selectedCategoryTitle==="Animals & Nature" ? "_34i1y _3_x6w IHDJG":"_34i1y IHDJG"} title="Animals & Nature" tabindex="0" onClick={() => this.handleCategoryClick("Animals & Nature")}>
+                                          <span ><svg viewBox="0 0 24 24" height="24" width="24" preserveAspectRatio="xMidYMid meet" class="" version="1.1" x="0px" y="0px" enable-background="new 0 0 24 24" ><path fill="currentColor" d="M7.2,12.2c0.608,0,1.1,0.627,1.1,1.4S7.808,15,7.2,15s-1.1-0.627-1.1-1.4S6.592,12.2,7.2,12.2z M16.9,12.2 c0.608,0,1.1,0.627,1.1,1.4S17.508,15,16.9,15s-1.1-0.627-1.1-1.4S16.292,12.2,16.9,12.2z M21.5,11.1c-0.3-0.6-0.7-1.4-1.2-2.4 c0.9-0.4,1.7-1.3,2-2.2c0.3-0.7,0.4-2.1-1-3.5l0,0c-1-0.9-2-1.2-2.9-1c-1.1,0.3-1.9,1.2-2.3,1.9c-1.4-0.7-2.9-0.8-4.1-0.8 c-1.5,0-2.8,0.3-4,0.9C7.5,3.1,6.8,2.2,5.7,1.9c-1-0.2-2,0.1-2.9,1l0,0c-1,1-1.4,2.2-1,3.4c0.4,1.1,1.2,1.9,2,2.3 c-0.2,0.5-0.4,1-0.6,1.6L3,10.4c-0.3,0.7-0.5,1.3-0.8,1.9c-0.4,1-0.9,1.9-0.9,3.1c0,1.6,0.8,6.7,10.5,6.7c3.8,0,6.6-0.7,8.5-2.2 s2.2-3.4,2.2-4.3C22.7,13.5,22.3,12.7,21.5,11.1z M18.8,3.5c0.4-0.1,0.9,0.1,1.5,0.6c0.6,0.6,0.8,1.2,0.6,1.8 c-0.2,0.6-0.7,1.1-1.2,1.3c-0.6-1.2-1.3-2-2.1-2.6C17.8,4.2,18.2,3.6,18.8,3.5z M3.3,5.9c-0.2-0.6,0-1.2,0.6-1.8 C4.4,3.6,5,3.4,5.4,3.5c0.5,0.1,1.1,0.7,1.3,1.2C5.8,5.4,5.1,6.2,4.5,7.3C4,7,3.4,6.5,3.3,5.9z M21.1,15.6c0,0.7-0.2,2-1.6,3.1 c-1.5,1.2-4.1,1.8-7.5,1.8c-8.3,0-8.9-3.9-8.9-5.1c0-0.8,0.3-1.5,0.7-2.4c0.3-0.6,0.6-1.2,0.8-2.1l0.1-0.2c0.5-1.5,2-6.2,7.3-6.2 c1.2,0,2.5,0.2,3.7,0.9c0.1,0.1,0.5,0.3,0.5,0.3c0.9,0.7,1.7,1.7,2.4,3.2c0.6,1.3,1,2.2,1.4,2.9C20.8,13.4,21.1,13.9,21.1,15.6z  M14.6,17c-0.1,0.1-0.6,0.4-1.2,0.3c-0.4-0.1-0.7-0.3-0.9-0.8c0-0.1-0.1-0.1-0.1-0.2c0.8-0.1,1.3-0.6,1.3-1.3S13,15,12,15 c-0.9,0-1.7-0.7-1.7,0c0,0.6,0.6,1.2,1.4,1.3l-0.1,0.1c-0.3,0.4-0.5,0.7-0.9,0.8c-0.5,0.1-1.1-0.1-1.3-0.3c-0.2-0.2-0.5-0.1-0.7,0.1 s-0.1,0.5,0.1,0.7c0.1,0.1,0.8,0.5,1.6,0.5c0.2,0,0.4,0,0.5-0.1c0.4-0.1,0.8-0.3,1.1-0.7c0.4,0.4,0.9,0.6,1.2,0.7 c0.8,0.2,1.7-0.2,2-0.5c0.2-0.2,0.2-0.5,0-0.7C15.1,16.9,14.8,16.8,14.6,17z"></path></svg>
+                                          </span></div>
+
+                                          <div role="button"  class={selectedCategoryTitle==="Food & Drink" ? "_34i1y _3_x6w IHDJG":"_34i1y IHDJG"} title="Food & Drink" tabindex="0" onClick={() => this.handleCategoryClick("Food & Drink")}>
+                                            <span ><svg viewBox="0 0 24 24" height="24" width="24" preserveAspectRatio="xMidYMid meet" class="" version="1.1" x="0px" y="0px" enable-background="new 0 0 24 24" ><path fill="currentColor" d="M7.4,11.4L7.4,11.4c-0.4,0-0.8,0.4-0.8,0.8V14c0,0.4,0.4,0.8,0.8,0.8l0,0c0.4,0,0.8-0.4,0.6-0.8v-1.8 C8,11.6,7.8,11.4,7.4,11.4z"></path><path fill="currentColor" d="M4.6,10.4c-0.4,0-0.8,0.4-0.8,0.8V15c0,0.4,0.4,0.8,0.8,0.8s0.8-0.4,0.8-0.8v-3.8C5.4,10.6,5,10.4,4.6,10.4z "></path><path fill="currentColor" d="M23,7.2c-0.6-0.6-1.6-0.8-2.8-0.6c-0.2,0-0.4,0.2-0.6,0.2V4.2C19.6,3.6,19,3,18.4,3h-17 C0.8,3,0.2,3.6,0.2,4.2v7.4c0,5.4,3.2,9.6,8.4,9.6h2.2c4.2,0,7-2.6,8-6H19h0.2c2.2-0.4,4-2.6,4.4-4.8C24,9,23.8,8,23,7.2z M18.2,4.4 v3H1.6v-3H18.2z M11,19.8H8.8c-5.2,0-7-4.4-7-8.2V8.8h16.6v2.8C18.2,15.6,16,19.8,11,19.8z M19.4,13.6c0.2-0.6,0.2-1.4,0.2-2V8.4 C20,8.2,20.2,8,20.6,8c0.6-0.2,1.2,0,1.4,0.4c0.4,0.4,0.6,1,0.4,1.8C22.2,11.6,20.8,13.2,19.4,13.6z"></path></svg>
+                                          </span></div>
+
+                                          <div role="button"  class={selectedCategoryTitle==="Activity" ? "_34i1y _3_x6w IHDJG":"_34i1y IHDJG"} title="Activity" tabindex="0" onClick={() => this.handleCategoryClick("Activity")}>
+                                            <span ><svg viewBox="0 0 24 24" height="24" width="24" preserveAspectRatio="xMidYMid meet" class="" version="1.1" x="0px" y="0px" enable-background="new 0 0 24 24" ><path fill="currentColor" d="M14.8,15.3l1.3-3.8c0.1-0.2,0-0.5-0.2-0.6l-3.3-2.4c-0.2-0.1-0.5-0.1-0.6,0l-3.3,2.4 c-0.2,0.1-0.3,0.4-0.2,0.6l1.3,3.8c0.1,0.2,0.3,0.4,0.5,0.4h4C14.5,15.7,14.7,15.5,14.8,15.3z"></path><path fill="currentColor" d="M12,1.9C6.4,1.9,1.9,6.4,1.9,12S6.4,22.1,12,22.1S22.1,17.6,22.1,12S17.6,1.9,12,1.9z M9.8,20.3 c0.1-0.2,0.1-0.4,0-0.6l-1.4-2.3c-0.1-0.1-0.2-0.2-0.4-0.3l-2.5-0.6c-0.2-0.1-0.5,0.1-0.6,0.2c-0.9-1.3-1.4-2.9-1.5-4.5 c0.2,0,0.4,0,0.5-0.2l1.7-2c0.1,0,0.2-0.2,0.2-0.3L5.5,7.1c0-0.2-0.1-0.3-0.3-0.4C6.2,5.4,7.5,4.5,9,4c0,0.1,0.2,0.3,0.3,0.3 l2.5,1.1c0.1,0.1,0.3,0.1,0.4,0l2.5-1.1C14.8,4.2,14.9,4.1,15,4c1.5,0.6,2.7,1.5,3.7,2.7c-0.1,0.1-0.2,0.2-0.2,0.4l-0.2,2.6 c0,0.2,0,0.3,0.1,0.4l1.7,2c0.1,0.1,0.3,0.2,0.4,0.2c0,1.6-0.5,3.1-1.3,4.4c-0.1-0.1-0.2-0.1-0.4-0.1l-2.5,0.6 c-0.1,0-0.3,0.1-0.4,0.3l-1.4,2.3c-0.1,0.2-0.1,0.3,0,0.5c-0.8,0.2-1.6,0.4-2.5,0.4C11.3,20.6,10.5,20.5,9.8,20.3z"></path></svg>
+                                          </span></div>
+                                          <div role="button"  class={selectedCategoryTitle==="Travel & Places" ? "_34i1y _3_x6w IHDJG":"_34i1y IHDJG"} title="Travel & Places" tabindex="0" onClick={() => this.handleCategoryClick("Travel & Places")}>
+                                            <span ><svg viewBox="0 0 24 24" height="24" width="24" preserveAspectRatio="xMidYMid meet" class="" version="1.1" x="0px" y="0px" enable-background="new 0 0 24 24"><path fill="currentColor" d="M21.5,11.5c0-0.7-0.1-1.4-0.3-2l-1.5-4.3C19.2,3.9,18,3,16.6,3H7.3C5.9,3,4.7,3.9,4.2,5.2L2.6,9.9 c-0.1,0.4-0.2,0.7-0.2,1.1v1.2l0,0v7.4c0,0.6,0.5,1.1,1.1,1.1h1.1c0.6,0,1.1-0.5,1.1-1.1v-1.1h12.7v1.1c0,0.6,0.5,1.1,1.1,1.1h1.1 c0.6,0,1.1-0.5,1.1-1.1v-7.4l0,0L21.5,11.5L21.5,11.5z M4.1,10.4l1.6-4.7C5.9,5,6.6,4.5,7.4,4.5h9.2c0.7,0,1.4,0.5,1.6,1.2l1.5,4.3 c0.1,0.3,0.2,0.6,0.2,0.8H4C3.9,10.7,4,10.5,4.1,10.4z M5.5,16.1c-0.8,0-1.5-0.7-1.5-1.5s0.7-1.5,1.5-1.5S7,13.8,7,14.6 C6.9,15.4,6.3,16.1,5.5,16.1z M14.9,15.5H9.3c-0.5,0-1-0.4-1-1c0-0.5,0.4-1,1-1h5.6c0.5,0,1,0.4,1,1C15.8,15.1,15.4,15.5,14.9,15.5z  M18.6,16.1c-0.8,0-1.5-0.7-1.5-1.5s0.7-1.5,1.5-1.5s1.5,0.7,1.5,1.5C20.1,15.4,19.4,16.1,18.6,16.1z"></path></svg>
+                                          </span></div>
+                                          <div role="button"  class={selectedCategoryTitle==="Objects" ? "_34i1y _3_x6w IHDJG":"_34i1y IHDJG"} title="Objects" tabindex="0" onClick={() => this.handleCategoryClick("Objects")}>
+                                            <span >
+                                              <svg viewBox="0 0 24 24" height="24" width="24" preserveAspectRatio="xMidYMid meet" class="" version="1.1" x="0px" y="0px" enable-background="new 0 0 24 24" ><path fill="currentColor" d="M18.8,6.7c-0.9-2.6-3.2-4.6-6-4.9c-0.3,0-0.5,0-0.8,0h0c-0.3,0-0.5,0-0.8,0C8.4,2.1,6.1,4,5.2,6.7 c-1,3,0.1,6.2,2.7,8H8c0.2,0.1,0.3,0.4,0.3,0.6v2c0,0.8,0.6,1.4,1.4,1.4h4.5h0.1c0.8,0,1.4-0.6,1.4-1.4v-2c0-0.2,0.1-0.5,0.3-0.6 l0.1-0.1C18.6,12.8,19.7,9.6,18.8,6.7z M15.3,13.6l-0.1,0.1c-0.5,0.4-0.9,1-0.9,1.7v2c0,0,0,0.1-0.1,0.1c0,0,0,0-0.1,0H9.8 c0,0-0.1,0-0.1-0.1v-2c0-0.7-0.3-1.3-0.9-1.7l-0.1-0.1c-2-1.4-3-4-2.2-6.5C7.2,5,9.1,3.4,11.4,3.2c0.2,0,0.4,0,0.6,0h0.1 c0.2,0,0.4,0,0.6,0c2.2,0.2,4.2,1.8,4.9,3.9C18.3,9.5,17.4,12.1,15.3,13.6z"></path><path fill="currentColor" d="M9.2,21.2c0,0.6,0.5,1,1,1h3.7c0.6,0,1-0.5,1-1v-1H9.2V21.2L9.2,21.2z"></path><path fill="currentColor" d="M13.6,10.5c-0.4,0-0.8,0.3-0.8,0.8c0,0.1,0,0.2,0.1,0.3c-0.2,0.3-0.5,0.5-0.8,0.5s-0.6-0.2-0.8-0.5 c0-0.1,0.1-0.2,0.1-0.3c0-0.4-0.3-0.8-0.8-0.8c-0.4,0-0.8,0.3-0.8,0.8c0,0.4,0.3,0.7,0.7,0.8c0.3,0.4,0.7,0.7,1.1,0.8V15 c0,0.2,0.2,0.4,0.4,0.4s0.4-0.2,0.4-0.4v-2.1c0.4-0.1,0.8-0.4,1.1-0.8l0,0c0.4,0,0.8-0.3,0.8-0.8C14.3,10.8,14,10.5,13.6,10.5z"></path></svg>
+                                          </span></div>
+                                          <div role="button"  class={selectedCategoryTitle==="Symbols" ? "_34i1y _3_x6w IHDJG":"_34i1y IHDJG"} title="Symbols" tabindex="0" onClick={() => this.handleCategoryClick("Symbols")}>
+                                            <span ><svg viewBox="0 0 24 24" height="24" width="24" preserveAspectRatio="xMidYMid meet" class="" version="1.1" x="0px" y="0px" enable-background="new 0 0 24 24" ><path fill="currentColor" d="M14.5,12.9V11h2.2l-0.2-1.3h-2V7.3H13v2.5h-2V7.4H9.5v2.4H7.2L7.4,11h2.1v1.9H7.3l0.2,1.3h2v2.4H11v-2.4h2 v2.4h1.5v-2.4h2.3l-0.2-1.3C16.6,12.9,14.5,12.9,14.5,12.9z M11,11h2v1.9h-2V11z"></path><path fill="currentColor" d="M16.1,2.6H7.9C5,2.6,2.6,5,2.6,7.9V16c0,3,2.4,5.3,5.3,5.3H16c3,0,5.3-2.4,5.3-5.3V7.9 C21.4,5,19,2.6,16.1,2.6z M19.8,16.1c0,2.1-1.6,3.8-3.7,3.8H7.9c-2.1,0-3.8-1.7-3.8-3.8V7.9c0-2.1,1.7-3.8,3.8-3.8H16 c2.1,0,3.8,1.7,3.8,3.8V16.1L19.8,16.1z"></path></svg>
+                                          </span></div>
+
+                                          <div role="button"  class={selectedCategoryTitle==="Flags" ? "_34i1y _3_x6w IHDJG":"_34i1y IHDJG"} title="Flags" tabindex="0" onClick={() => this.handleCategoryClick("Flags")}>
+                                            <span ><svg viewBox="0 0 24 24" height="24" width="24" preserveAspectRatio="xMidYMid meet" class="" version="1.1" x="0px" y="0px" enable-background="new 0 0 24 24" ><path fill="currentColor" d="M5.5,3.8V3.6c0-0.3-0.2-0.5-0.5-0.5H4.5C4.2,3.1,4,3.3,4,3.6V21c0,0.3,0.2,0.5,0.5,0.5H5 c0.3,0,0.5-0.2,0.5-0.5v-6.2c5,1.8,9.3-2.7,14.5,0.6c0-5.6,0-5.6,0-11.3C14.9,1,10.3,5.6,5.5,3.8z M15.8,12.6 c-1.4,0-2.8,0.3-4.1,0.6c-1.2,0.3-2.4,0.5-3.5,0.5c-0.9,0-1.8-0.2-2.6-0.5V5.4c0.8,0.2,1.5,0.3,2.3,0.3c1.5,0,2.9-0.4,4.3-0.7 c1.3-0.3,2.5-0.6,3.8-0.6c0.9,0,1.7,0.2,2.5,0.5V13C17.6,12.8,16.7,12.6,15.8,12.6z"></path></svg>
+                                          </span></div>
+                                          </div>
+
+                                      </div>
+                                      <div className="">
+                                        <div className="DataSetEmojiForThe">
+                                          <div className="g0rxnol2 thghmljt">
+                                            <div className="g0rxnol2 _3wVxf _2PRKV">
+                                              <div className="" >
+                                                <div className="_3YS_f _2A1R8">
+                                                {emojiData1.map((category, index) => (
+                                                  <>
+                                                      <div className="_2w8xI">{category.Name}</div>
+                                                      <div>
+                                                        {category.Emoji.map((emoji, emojiIndex) => (
+                                                          <span
+                                                            key={emojiIndex}
+                                                            className="emoji"
+                                                            onClick={() => this.handleEmojiClick(emoji)}
+                                                            style={{margin:"8px",fontSize:"25px",cursor:"pointer"}}
+                                                          >
+                                                            {emoji}
+                                                          </span>
+                                                        ))}
+                                                      </div>
+                                                      </>
+                                                ))}
+                                                </div>
+                                              </div>
+                                            </div>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    </div>
+                                    </ul>
+                                  </div>
+                                </span>
+                              )}
                             </div>
                             <div className="fileSetAgain">
                               <div className="setFileAgain">
@@ -2354,7 +2539,7 @@ handleUserFileUpload = (e) => {
                                     <div className="InputBar2">
                                       <div className="InputBar3">
                                         <div className="setInputAgain1">
-                                          <form onSubmit={this.handleSubmit}>
+                                          <form onSubmit={this.handleUserDocumentFileUpload}>
                                             <div
                                               className="setForm"
                                               style={{
@@ -2949,7 +3134,7 @@ handleUserFileUpload = (e) => {
               )}
             </div>
           </div>
-        </div>
+        </div>)}
       </div>
     ) : (
       ""

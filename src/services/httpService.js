@@ -1,6 +1,7 @@
 import axois from "axios"
 
-const baseURL = "http://localhost:2411";
+// const baseURL = "http://localhost:2411";
+const baseURL = "https://serverwhatsapp.onrender.com";
 
 function get(url) {
   return axois.get(baseURL + url);
