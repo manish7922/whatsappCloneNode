@@ -12,6 +12,7 @@ import { Document,Page,pdfjs} from 'react-pdf';
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.js`;
 
 export default class ChatConversion extends Component {
+
   state = {
     view: 0,
     throwIfNamespace: false,
@@ -50,7 +51,7 @@ export default class ChatConversion extends Component {
       {Name:"Flags",Emoji:["🏳️", "🏴", "🏁", "🚩", "🏳️‍🌈", "🏳️", "🏴‍☠️", " 🎌","🏴󠁧󠁢󠁥󠁮󠁧󠁿", "🏴󠁧󠁢󠁳󠁣󠁴󠁿", "🏴󠁧󠁢󠁷󠁬󠁳󠁿",""]},
      ],
      selectedCategoryTitle: "Smileys & People",
-    //  messageContainerRef : React.createRef(),
+     messageContainerRef : React.createRef(),
     //  shouldScrollToBottom : false,
     showBottom:false,
   };
@@ -120,6 +121,17 @@ export default class ChatConversion extends Component {
     // if (prevProps.messagesList !== this.state.messagesList) {
     //   this.scrollToBottom();
     // }
+
+    if (prevState.messagesList !== this.state.messagesList) {
+      this.scrollToBottom();
+    }
+
+    // const btn = document.getElementsByClassName('setAgainText');
+
+    // btn.addEventListener('click', () => window.scrollTo({
+    //   bottom:0,
+    //   behavior: 'smooth',
+    // }));
   }
 
 
@@ -164,11 +176,11 @@ export default class ChatConversion extends Component {
     });
   };
 
-  // scrollToBottom = () => {
-  //   if (this.messagesEndRef.current) {
-  //     this.messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
-  //   }
-  // };
+  scrollToBottom = () => {
+    if (this.state.messageContainerRef.current) {
+      this.state.messageContainerRef.current.scrollTop = this.state.messageContainerRef.current.scrollHeight;
+    }
+  };
     
 handleUserDocumentFileUpload=(e)=>{
   // debugger
@@ -331,6 +343,17 @@ handleUserFileUpload = (e) => {
   
     this.setState({ form: { q: "", msgSend: "" },showEmoji:false,showBottom:true });
     // this.scrollToBottom();
+    // window.scrollTo({
+    //   behavior: 'smooth',
+    //   bottom:0,
+    // })
+
+//     const btn = document.getElementsByClassName('setAgainText');
+
+// btn.addEventListener('click', () => window.scrollTo({
+//   bottom:0,
+//   behavior: 'smooth',
+// }));
   };
 
   async postData1(url, obj) {
@@ -1551,7 +1574,7 @@ this.setState({selectedCategoryTitle:categoryTitle})
                         </div>
                       </div>
                       <div className="setMessage" tabIndex="-1">
-                        <div className="setMessageAgain">
+                        <div className="setMessageAgain" ref={this.state.messageContainerRef} style={{  overflowY: 'auto' }}>
                           {messagesList.map((n) => (
                             <div>
                               {data.id === n.id ? (
