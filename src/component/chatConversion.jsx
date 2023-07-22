@@ -51,13 +51,13 @@ export default class ChatConversion extends Component {
       {Name:"Flags",Emoji:["🏳️", "🏴", "🏁", "🚩", "🏳️‍🌈", "🏳️", "🏴‍☠️", " 🎌","🏴󠁧󠁢󠁥󠁮󠁧󠁿", "🏴󠁧󠁢󠁳󠁣󠁴󠁿", "🏴󠁧󠁢󠁷󠁬󠁳󠁿",""]},
      ],
      selectedCategoryTitle: "Smileys & People",
-     messageContainerRef : React.createRef(),
+    //  messageContainerRef : React.createRef(),
     //  shouldScrollToBottom : false,
     showBottom:false,
   };
   socket = io("https://serverwhatsapp.onrender.com");
 
-  // messageContainerRef = React.createRef();
+  messageContainerRef = React.createRef();
   fetchContacts = () => {
     axios
       .get("https://serverwhatsapp.onrender.com/contacts")
@@ -177,8 +177,8 @@ export default class ChatConversion extends Component {
   };
 
   scrollToBottom = () => {
-    if (this.state.messageContainerRef.current) {
-      this.state.messageContainerRef.current.scrollTop = this.state.messageContainerRef.current.scrollHeight;
+    if (this.messageContainerRef.current) {
+      this.messageContainerRef.current.scrollTop = this.messageContainerRef.current.scrollHeight;
     }
   };
     
@@ -342,7 +342,7 @@ handleUserFileUpload = (e) => {
     }
   
     this.setState({ form: { q: "", msgSend: "" },showEmoji:false,showBottom:true });
-    // this.scrollToBottom();
+    this.scrollToBottom();
     // window.scrollTo({
     //   behavior: 'smooth',
     //   bottom:0,
@@ -1563,7 +1563,7 @@ this.setState({selectedCategoryTitle:categoryTitle})
                 <span className="nfki698u tvf2evcx oq44ahr5 lb5m6g5c"></span>
                 <div className="middlePArt">
                   <div className="middlePArtView">
-                    <div className={`middlePArtMain ${showBottom ? "middlePart1":""}`} tabIndex="0" >
+                    <div className={`middlePArtMain ${showBottom ? "middlePart1":""}`} ref={this.messageContainerRef} style={{  overflowY: 'auto' }} tabIndex="0" >
                       <div className="FdUCm"></div>
                       <div className="showDataTop dataTop">
                         <div className="topDataAgain TopData">
@@ -1574,7 +1574,7 @@ this.setState({selectedCategoryTitle:categoryTitle})
                         </div>
                       </div>
                       <div className="setMessage" tabIndex="-1">
-                        <div className="setMessageAgain" ref={this.state.messageContainerRef} style={{  overflowY: 'auto' }}>
+                        <div className="setMessageAgain" >
                           {messagesList.map((n) => (
                             <div>
                               {data.id === n.id ? (
